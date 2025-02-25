@@ -13,8 +13,10 @@ public class Epic {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "epic_id")
     private Long id;
+
     @Column(name = "nom", nullable = false, length = 100)
     private String nom;
+
     @Column(name = "description", length = 255)
     private String description;
 
