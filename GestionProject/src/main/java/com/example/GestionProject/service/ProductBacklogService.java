@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ProductBacklogService {
+public class ProductBacklogService implements ProductBacklogInterface{
     private final ProductBacklogRepository productBacklogRepository;
 
     @Autowired

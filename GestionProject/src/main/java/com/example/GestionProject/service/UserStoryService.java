@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserStoryService {
+public class UserStoryService  implements UserStoryInterface{
     private final UserStoryRepository UserStoryRepository;
     private final ProductBacklogRepository productBacklogRepository;
 
