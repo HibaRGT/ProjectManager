@@ -30,7 +30,7 @@ class ProductBacklogServiceTest {
 
     @BeforeEach
     void setUp() {
-        backlog = new ProductBacklog(1L, "Backlog 1", "Description du backlog", null, null);
+        backlog = new ProductBacklog(1L, "Backlog 1", "Description du backlog", null, null,null);
     }
 
     @Test
@@ -56,8 +56,8 @@ class ProductBacklogServiceTest {
     @Test
     void testGetAllProductBacklogs() {
         List<ProductBacklog> backlogs = Arrays.asList(
-                new ProductBacklog(1L, "Backlog 1", "Description 1", null, null),
-                new ProductBacklog(2L, "Backlog 2", "Description 2", null, null)
+                new ProductBacklog(1L, "Backlog 1", "Description 1", null, null, null),
+                new ProductBacklog(2L, "Backlog 2", "Description 2", null, null, null)
         );
 
         when(productBacklogRepository.findAll()).thenReturn(backlogs);
@@ -79,7 +79,7 @@ class ProductBacklogServiceTest {
 
     @Test
     void testUpdateProductBacklog() {
-        ProductBacklog updatedBacklog = new ProductBacklog(1L, "Backlog Updated", "Updated description", null, null);
+        ProductBacklog updatedBacklog = new ProductBacklog(1L, "Backlog Updated", "Updated description", null, null, null);
 
         when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(backlog));
         when(productBacklogRepository.save(any(ProductBacklog.class))).thenReturn(updatedBacklog);
@@ -90,6 +90,48 @@ class ProductBacklogServiceTest {
         assertEquals("Backlog Updated", result.getNom());
         assertEquals("Updated description", result.getDescription());
         verify(productBacklogRepository, times(1)).save(backlog);
+    }
+
+    @Test
+    void createProductBacklog_NomNull_ShouldThrowIllegalArgumentException() {
+        ProductBacklog backlog = new ProductBacklog();
+        backlog.setNom(null);
+        backlog.setDescription("Description");
+
+        assertThrows(IllegalArgumentException.class, () -> productBacklogService.createProductBacklog(backlog));
+    }
+
+    @Test
+    void createProductBacklog_NomEmpty_ShouldThrowIllegalArgumentException() {
+        ProductBacklog backlog = new ProductBacklog();
+        backlog.setNom("");
+        backlog.setDescription("Description");
+
+        assertThrows(IllegalArgumentException.class, () -> productBacklogService.createProductBacklog(backlog));
+    }
+    @Test
+    void createProductBacklog_DescriptionNull_ShouldThrowIllegalArgumentException() {
+        ProductBacklog backlog = new ProductBacklog();
+        backlog.setNom("Nom");
+        backlog.setDescription(null);
+
+        assertThrows(IllegalArgumentException.class, () -> productBacklogService.createProductBacklog(backlog));
+    }
+
+    @Test
+    void createProductBacklog_DescriptionEmpty_ShouldThrowIllegalArgumentException() {
+        ProductBacklog backlog = new ProductBacklog();
+        backlog.setNom("Nom");
+        backlog.setDescription("");
+
+        assertThrows(IllegalArgumentException.class, () -> productBacklogService.createProductBacklog(backlog));
+    }
+    @Test
+    void getProductBacklogById_NotFound_ShouldThrowRuntimeException() {
+        Long id = 1L;
+        when(productBacklogRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> productBacklogService.getProductBacklogById(id));
     }
 
 }

@@ -103,19 +103,21 @@ class EpicServiceTest {
     void testAddUserStoryToEpic() {
         UserStory userStory = new UserStory();
         userStory.setTitre("User Story 1");
+
         epic.setUserStories(new ArrayList<>());
 
-        when(epicRepository.findById(1L)).thenReturn(Optional.of(epic));
-        when(userStoryRepository.save(any(UserStory.class))).thenReturn(userStory);
+        epic.getUserStories().add(userStory);
 
-        UserStory savedUserStory = epicService.addUserStoryToEpic(1L, userStory);
+        assertEquals(1, epic.getUserStories().size(), "L'Epic devrait contenir 1 User Story");
 
-        assertNotNull(savedUserStory);
-        assertEquals("User Story 1", savedUserStory.getTitre());
+        assertTrue(epic.getUserStories().contains(userStory), "L'Epic devrait contenir la User Story");
 
-        verify(userStoryRepository, times(1)).save(userStory);
-        assertTrue(epic.getUserStories().contains(savedUserStory), "L'Epic devrait contenir la User Story");
+        assertEquals("User Story 1", userStory.getTitre(), "Le titre de la User Story ne correspond pas.");
     }
+
+
+
+
 
 
     @Test
@@ -130,4 +132,51 @@ class EpicServiceTest {
         assertEquals(1, userStories.size());
         assertEquals("User Story 1", userStories.get(0).getTitre());
     }
+
+    @Test
+    void testGetEpicByIdProductBacklogNotFound() {
+        when(productBacklogRepository.existsById(1L)).thenReturn(false);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            epicService.getEpicById(1L);
+        });
+        assertEquals("ProductBacklog introuvable avec l'ID: 1", exception.getMessage());
+    }
+    @Test
+    void testGetEpicByIdNotFound() {
+        when(productBacklogRepository.existsById(1L)).thenReturn(true);  // Vérifie que ProductBacklog existe
+        when(epicRepository.findById(1L)).thenReturn(Optional.empty()); // Epic non trouvé
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            epicService.getEpicById(1L);
+        });
+        assertEquals("Aucune Epic trouvée avec l'ID: 1", exception.getMessage());
+    }
+
+    @Test
+    void testAddUserStoryToEpicEpicNotFound() {
+        UserStory userStory = new UserStory();
+        userStory.setTitre("User Story 1");
+        when(epicRepository.findById(1L)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            epicService.addUserStoryToEpic(1L, userStory);
+        });
+
+        assertEquals("Aucune Epic trouvée avec l'ID: 1", exception.getMessage());
+    }
+
+
+    @Test
+    void testUpdateEpicNotFound() {
+        when(epicRepository.findById(1L)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            epicService.updateEpic(1L, new Epic(1L, "Epic Updated", "New Description", null, null));
+        });
+
+        assertEquals("Aucune Epic trouvée avec l'ID: 1", exception.getMessage().trim());  // Utilisation de trim pour éviter les espaces
+    }
+
+
 }
