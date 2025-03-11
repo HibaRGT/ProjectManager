@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class ProjectService {
+public class ProjectService implements ProjectInterface{
 
     private final ProjectRepository projectRepository;
     private final ProductBacklogRepository productBacklogRepository;
