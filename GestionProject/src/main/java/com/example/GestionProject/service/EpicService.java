@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class EpicService {
+public class EpicService implements EpicInterface {
 
     private final EpicRepository epicRepository;
     private final ProductBacklogRepository productBacklogRepository;
