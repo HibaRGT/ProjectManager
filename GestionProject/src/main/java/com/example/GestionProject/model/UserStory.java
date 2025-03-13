@@ -3,6 +3,8 @@ package com.example.GestionProject.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "user_story")
 @Getter @Setter
@@ -36,4 +38,12 @@ public class UserStory {
     @ManyToOne
     @JoinColumn(name = "product_backlog_id")
     private ProductBacklog productBacklog;
+
+    @ManyToOne
+    @JoinColumn(name="sprint_backlog_id")
+    private SprintBacklog sprintBacklog;
+
+    @OneToMany(mappedBy = "userStory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> tasks;
+
 }

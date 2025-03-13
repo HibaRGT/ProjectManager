@@ -1,10 +1,11 @@
-package com.example.GestionProject.service;
+package com.example.GestionProject.service.implementation;
 
 import com.example.GestionProject.model.Epic;
 import com.example.GestionProject.model.UserStory;
 import com.example.GestionProject.repository.EpicRepository;
 import com.example.GestionProject.repository.ProductBacklogRepository;
 import com.example.GestionProject.repository.UserStoryRepository;
+import com.example.GestionProject.service.interfaces.EpicInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +25,13 @@ public class EpicService implements EpicInterface {
         this.userStoryRepository = userStoryRepository;
     }
 
+    @Override
     public Epic createEpic(Epic epic) {
         validateEpic(epic);
         return epicRepository.save(epic);
     }
 
+    @Override
     public Epic getEpicById(Long id) {
         if (!productBacklogRepository.existsById(id)) {
             throw new RuntimeException("ProductBacklog introuvable avec l'ID: " + id);
@@ -37,14 +40,17 @@ public class EpicService implements EpicInterface {
                 .orElseThrow(() -> new RuntimeException("Aucune Epic trouvée avec l'ID: " + id));
     }
 
+    @Override
     public List<Epic> getEpicsByProductBacklogId(Long productBacklogId) {
         return epicRepository.findByProductBacklogId(productBacklogId);
     }
 
+    @Override
     public List<Epic> getAllEpics() {
         return epicRepository.findAll();
     }
 
+    @Override
     public Epic updateEpic(Long id, Epic epic) {
         Epic ep = epicRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException(("Aucune Epic trouvée avec l'ID: "+ id + " ")));
@@ -56,6 +62,7 @@ public class EpicService implements EpicInterface {
 
     }
 
+    @Override
     public UserStory addUserStoryToEpic(Long epicId, UserStory userStory) {
         Epic epic = epicRepository.findById(epicId)
                 .orElseThrow(() -> new RuntimeException("Aucune Epic trouvée avec l'ID: " + epicId));
@@ -64,8 +71,17 @@ public class EpicService implements EpicInterface {
         return userStoryRepository.save(userStory);
     }
 
+    @Override
     public List<UserStory> getUserStoriesByEpicId(Long epicId) {
         return userStoryRepository.findByEpicId(epicId);
+    }
+
+    @Override
+    public void deleteEpic(Long id) {
+        if (!epicRepository.existsById(id)) {
+            throw new RuntimeException("Epic non trouvée avec l'ID: " + id);
+        }
+        epicRepository.deleteById(id);
     }
 
     private void validateEpic(Epic epic) {

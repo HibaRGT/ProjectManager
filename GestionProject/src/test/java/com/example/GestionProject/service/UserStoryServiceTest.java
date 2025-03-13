@@ -5,6 +5,7 @@ import com.example.GestionProject.model.StatutEnum;
 import com.example.GestionProject.model.UserStory;
 import com.example.GestionProject.repository.ProductBacklogRepository;
 import com.example.GestionProject.repository.UserStoryRepository;
+import com.example.GestionProject.service.implementation.UserStoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

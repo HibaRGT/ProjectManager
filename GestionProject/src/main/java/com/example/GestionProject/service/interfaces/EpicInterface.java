@@ -1,4 +1,4 @@
-package com.example.GestionProject.service;
+package com.example.GestionProject.service.interfaces;
 
 import com.example.GestionProject.model.Epic;
 import com.example.GestionProject.model.UserStory;
@@ -13,4 +13,5 @@ public interface EpicInterface {
     public Epic updateEpic(Long id, Epic epic);
     public UserStory addUserStoryToEpic(Long epicId, UserStory userStory);
     public List<UserStory> getUserStoriesByEpicId(Long epicId);
+    public void deleteEpic(Long id);
 }

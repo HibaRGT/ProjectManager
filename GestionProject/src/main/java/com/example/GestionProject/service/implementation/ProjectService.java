@@ -1,10 +1,10 @@
-package com.example.GestionProject.service;
+package com.example.GestionProject.service.implementation;
 
-import com.example.GestionProject.model.Epic;
 import com.example.GestionProject.model.ProductBacklog;
 import com.example.GestionProject.model.Project;
 import com.example.GestionProject.repository.ProductBacklogRepository;
 import com.example.GestionProject.repository.ProjectRepository;
+import com.example.GestionProject.service.interfaces.ProjectInterface;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class ProjectService {
+public class ProjectService implements ProjectInterface {
 
     private final ProjectRepository projectRepository;
     private final ProductBacklogRepository productBacklogRepository;
@@ -24,15 +24,18 @@ public class ProjectService {
         this.productBacklogRepository = pbr;
     }
 
+    @Override
     public Project createProject(Project project){
         validateProject(project);
         return projectRepository.save(project);
     }
 
+    @Override
     public List<Project> getAllProject() {
         return projectRepository.findAll();
     }
 
+    @Override
     public Project getProjectById(Long id) {
         if (!projectRepository.existsById(id)) {
             throw new RuntimeException("Project introuvable avec l'ID: " + id);
@@ -41,6 +44,7 @@ public class ProjectService {
                 .orElseThrow(() -> new RuntimeException("Aucun projet trouvée avec l'ID: " + id));
     }
 
+    @Override
     public void deleteProject(Long id) {
         if (!projectRepository.existsById(id)) {
             throw new RuntimeException("Project non trouvé avec l'ID: " + id);
@@ -48,6 +52,7 @@ public class ProjectService {
         projectRepository.deleteById(id);
     }
 
+    @Override
     public Project updateProject(Long id, Project project) {
         Project existingProject = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project non trouvé avec l'ID: " + id));
@@ -65,7 +70,7 @@ public class ProjectService {
         return projectRepository.save(existingProject);
     }
 
-    @Transactional
+    @Override
     public Project addProductBacklogToProject(Long projectId, ProductBacklog productBacklog) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new EntityNotFoundException("Project introuvable avec ID: " + projectId));

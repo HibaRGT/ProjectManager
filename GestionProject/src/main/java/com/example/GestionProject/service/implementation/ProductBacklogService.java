@@ -1,14 +1,15 @@
-package com.example.GestionProject.service;
+package com.example.GestionProject.service.implementation;
 
 import com.example.GestionProject.model.ProductBacklog;
 import com.example.GestionProject.repository.ProductBacklogRepository;
+import com.example.GestionProject.service.interfaces.ProductBacklogInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class ProductBacklogService {
+public class ProductBacklogService implements ProductBacklogInterface {
     private final ProductBacklogRepository productBacklogRepository;
 
     @Autowired
@@ -16,6 +17,7 @@ public class ProductBacklogService {
         this.productBacklogRepository = productBacklogRepository;
     }
 
+    @Override
     public ProductBacklog createProductBacklog(ProductBacklog backlog) {
         if (backlog.getNom() == null || backlog.getNom().isEmpty()) {
             throw new IllegalArgumentException("Le nom du backlog ne peut pas être vide");
@@ -26,19 +28,26 @@ public class ProductBacklogService {
         return productBacklogRepository.save(backlog);
     }
 
+    @Override
     public ProductBacklog getProductBacklogById(Long id) {
         return productBacklogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ProductBacklog non trouvé avec l'ID: " + id));
     }
 
+    @Override
     public List<ProductBacklog> getAllProductBacklogs() {
         return productBacklogRepository.findAll();
     }
 
+    @Override
     public void deleteProductBacklog(Long id) {
+        if (!productBacklogRepository.existsById(id)) {
+            throw new RuntimeException("ProductBacklog non trouvée avec l'ID: " + id);
+        }
         productBacklogRepository.deleteById(id);
     }
 
+    @Override
     public ProductBacklog updateProductBacklog(Long id, ProductBacklog backlog) {
         ProductBacklog existingBacklog = productBacklogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ProductBacklog non trouvé avec l'ID: " + id));

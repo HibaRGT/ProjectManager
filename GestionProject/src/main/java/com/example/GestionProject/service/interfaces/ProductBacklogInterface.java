@@ -1,4 +1,4 @@
-package com.example.GestionProject.service;
+package com.example.GestionProject.service.interfaces;
 
 import com.example.GestionProject.model.ProductBacklog;
 
