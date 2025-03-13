@@ -1,8 +1,6 @@
 package com.example.GestionProject.service;
 
-import com.example.GestionProject.model.ProductBacklog;
-import com.example.GestionProject.model.StatutEnum;
-import com.example.GestionProject.model.UserStory;
+import com.example.GestionProject.model.*;
 import com.example.GestionProject.repository.ProductBacklogRepository;
 import com.example.GestionProject.repository.UserStoryRepository;
 import com.example.GestionProject.service.implementation.UserStoryService;
@@ -13,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -34,11 +33,13 @@ class UserStoryServiceTest {
 
     private UserStory userStory;
     private ProductBacklog backlog;
+    private SprintBacklog sprintBacklog;
+    private List<Task> tasks;
 
     @BeforeEach
     void setUp() {
         backlog = new ProductBacklog(1L, "Backlog", "Description du backlog", null, null, null);
-        userStory = new UserStory(1L, "US 1", "Description", 1, StatutEnum.TO_DO, null, backlog);
+        userStory = new UserStory(1L, "US 1", "Description", 1, StatutEnum.TO_DO, null, backlog, sprintBacklog, tasks);
     }
 
     @Test
@@ -72,14 +73,15 @@ class UserStoryServiceTest {
         assertEquals("US 1", foundUserStory.getTitre());
     }
 
-    @Test
+    //Not needed because I deleted this function deleteById is enough
+    /*@Test
     void testDeleteUserStoryEntity() {
         doNothing().when(userStoryRepository).delete(userStory);
 
         userStoryService.deleteUserStoryEntity(userStory);
 
         verify(userStoryRepository, times(1)).delete(userStory);
-    }
+    }*/
 
     @Test
     void testGetUserStoriesByBacklogId() {

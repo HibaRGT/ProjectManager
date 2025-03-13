@@ -9,6 +9,7 @@ import com.example.GestionProject.service.interfaces.EpicInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -68,7 +69,15 @@ public class EpicService implements EpicInterface {
                 .orElseThrow(() -> new RuntimeException("Aucune Epic trouvée avec l'ID: " + epicId));
 
         userStory.setEpic(epic);
-        return userStoryRepository.save(userStory);
+        /////////////:
+        if (epic.getUserStories() == null) {
+            epic.setUserStories(new ArrayList<>());
+        }
+        epic.getUserStories().add(userStory);
+
+        userStoryRepository.save(userStory);
+        epicRepository.save(epic);
+        return userStory;
     }
 
     @Override
