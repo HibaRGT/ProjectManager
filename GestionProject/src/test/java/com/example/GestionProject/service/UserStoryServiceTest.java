@@ -37,7 +37,7 @@ class UserStoryServiceTest {
 
     @BeforeEach
     void setUp() {
-        backlog = new ProductBacklog(1L, "Backlog", "Description du backlog", null, null);
+        backlog = new ProductBacklog(1L, "Backlog", "Description du backlog", null, null, null);
         userStory = new UserStory(1L, "US 1", "Description", 1, StatutEnum.TO_DO, null, backlog);
     }
 
@@ -132,5 +132,40 @@ class UserStoryServiceTest {
         UserStory updatedUserStory = userStoryService.updateUserStoryPriority(1L, 5);
 
         assertEquals(5, updatedUserStory.getPriorite());
+    }
+
+    @Test
+    void testCreateUserStoryInBacklogWithInvalidData() {
+        userStory.setTitre("");
+
+        when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(backlog));
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userStoryService.createUserStoryInBacklog(userStory, 1L);
+        });
+
+        assertEquals("Le titre de la user story ne peut pas être vide", exception.getMessage());
+    }
+
+    @Test
+    void testGetUserStoryById_NotFound() {
+        when(userStoryRepository.findById(2L)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userStoryService.getUserStoryById(2L);
+        });
+
+        assertEquals("UserStory introuvable avec l'ID: 2", exception.getMessage());
+    }
+
+    @Test
+    void testDeleteUserStoryById_NotFound() {
+        when(userStoryRepository.existsById(3L)).thenReturn(false);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userStoryService.deleteUserStoryById(3L);
+        });
+
+        assertEquals("UserStory non trouvée avec l'ID: 3", exception.getMessage());
     }
 }
