@@ -80,28 +80,6 @@ public class EpicService implements EpicInterface {
 
     }
 
-    @Override
-    public UserStoryDTO addUserStoryToEpic(Long epicId, UserStoryDTO userStoryDTO) {
-        Epic epic = epicRepository.findById(epicId)
-                .orElseThrow(() -> new RuntimeException("Aucune Epic trouvée avec l'ID: " + epicId));
-
-
-        UserStory us = convertToEntity(userStoryDTO);
-
-        us.setEpic(epic);
-
-        if (epic.getUserStories() == null) {
-            epic.setUserStories(new ArrayList<>());
-        }
-        epic.getUserStories().add(us);
-
-        userStoryRepository.save(us);
-        epicRepository.save(epic);
-
-        return convertToDTO(us);
-    }
-
-
 
     @Override
     public void deleteEpic(Long id) {
@@ -132,30 +110,5 @@ public class EpicService implements EpicInterface {
         );
     }
 
-    private UserStory convertToEntity(UserStoryDTO userStoryDTO) {
-        UserStory userStory = new UserStory();
-        userStory.setId(userStoryDTO.getId());
-        userStory.setTitre(userStoryDTO.getTitre());
-        userStory.setDescription(userStoryDTO.getDescription());
-        userStory.setPriorite(userStoryDTO.getPriorite());
-        userStory.setStatut(userStoryDTO.getStatut());
-        return userStory;
-    }
-
-    public UserStoryDTO convertToDTO(UserStory userStory) {
-        return new UserStoryDTO(
-                userStory.getId(),
-                userStory.getTitre(),
-                userStory.getDescription(),
-                userStory.getPriorite(),
-                userStory.getStatut(),
-                userStory.getEpic() != null ? userStory.getEpic().getId() : null,
-                userStory.getProductBacklog() != null ? userStory.getProductBacklog().getId() : null,
-                userStory.getSprintBacklog() != null ? userStory.getSprintBacklog().getId() : null,
-                userStory.getTasks() != null ?
-                        userStory.getTasks().stream().map(Task::getId).collect(Collectors.toList())
-                        : null
-        );
-    }
 
     }

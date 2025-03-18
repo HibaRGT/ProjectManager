@@ -1,28 +1,35 @@
 package com.example.GestionProject.dto;
 
-import com.example.GestionProject.model.*;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 public class ProductBacklogDTO implements Serializable {
+
+    @NotNull(message = "id may not be null")
     private Long id;
+
+    @NotBlank(message = "nom may not be blank")
     private String nom;
+
+    @NotBlank(message = "description may not be blank")
     private String description;
+
+    @NotNull(message = "List of epic Ids may not be null")
     private List<Long> epicIds;
+
+    @NotNull(message = "List of userStories may not be null")
     private List<Long> userStoryIds;
+
     private Long projectId;
+
+    @NotNull(message = "List of sprintBacklog Ids may not be null")
     private List<Long> sprintBacklogIds;
 
 

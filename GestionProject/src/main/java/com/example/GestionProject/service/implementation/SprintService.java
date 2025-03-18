@@ -22,16 +22,12 @@ import java.util.stream.Collectors;
 @Service
 public class SprintService implements SprintInterface {
     private final SprintRepository sprintRepository;
-    private final UserStoryRepository userStoryRepository;
-    private final SprintBacklogRepository sprintBacklogRepository;
-    private final ProjectRepository projectRepository;
+
 
     @Autowired
-    public SprintService(SprintRepository sprintRepository, UserStoryRepository userStoryRepository, SprintBacklogRepository sprintBacklogRepository, ProjectRepository projectRepository) {
+    public SprintService(SprintRepository sprintRepository
+    ) {
         this.sprintRepository = sprintRepository;
-        this.userStoryRepository = userStoryRepository;
-        this.sprintBacklogRepository = sprintBacklogRepository;
-        this.projectRepository = projectRepository;
     }
 
     @Override

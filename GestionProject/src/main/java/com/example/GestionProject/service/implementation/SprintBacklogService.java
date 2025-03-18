@@ -24,14 +24,15 @@ import java.util.stream.Collectors;
 @Service
 public class SprintBacklogService implements SprintBacklogInterface{
     private final SprintBacklogRepository sprintBacklogrepository;
-    private final UserStoryRepository userStoryRepository;
     private final SprintRepository sprintRepository;
     private final ProductBacklogRepository productBacklogRepository;
 
     @Autowired
-    public SprintBacklogService(SprintBacklogRepository sprintBacklogrepository, UserStoryRepository userStoryRepository, SprintRepository sprintRepository, ProductBacklogRepository productBacklogRepository) {
+    public SprintBacklogService(SprintBacklogRepository sprintBacklogrepository,
+                                SprintRepository sprintRepository,
+                                ProductBacklogRepository productBacklogRepository
+    ) {
         this.sprintBacklogrepository = sprintBacklogrepository;
-        this.userStoryRepository = userStoryRepository;
         this.sprintRepository = sprintRepository;
         this.productBacklogRepository = productBacklogRepository;
     }

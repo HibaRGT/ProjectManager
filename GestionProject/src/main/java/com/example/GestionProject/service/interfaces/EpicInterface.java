@@ -12,6 +12,5 @@ public interface EpicInterface {
     public EpicDTO getEpicById(Long id);
     public List<EpicDTO> getEpicsByProductBacklogId(Long productBacklogId);
     public EpicDTO updateEpic(Long id, EpicDTO epicDTO);
-    public UserStoryDTO addUserStoryToEpic(Long epicId, UserStoryDTO userStoryDTO);
     public void deleteEpic(Long id);
 }
