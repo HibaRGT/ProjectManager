@@ -1,8 +1,11 @@
 package com.example.GestionProject.service.implementation;
 
+import com.example.GestionProject.dto.SprintDTO;
+import com.example.GestionProject.model.Project;
 import com.example.GestionProject.model.Sprint;
 import com.example.GestionProject.model.SprintBacklog;
 import com.example.GestionProject.model.UserStory;
+import com.example.GestionProject.repository.ProjectRepository;
 import com.example.GestionProject.repository.SprintBacklogRepository;
 import com.example.GestionProject.repository.SprintRepository;
 import com.example.GestionProject.repository.UserStoryRepository;
@@ -14,55 +17,67 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class SprintService implements SprintInterface {
     private final SprintRepository sprintRepository;
     private final UserStoryRepository userStoryRepository;
     private final SprintBacklogRepository sprintBacklogRepository;
+    private final ProjectRepository projectRepository;
 
     @Autowired
-    public SprintService(SprintRepository sprintRepository, UserStoryRepository userStoryRepository, SprintBacklogRepository sprintBacklogRepository) {
+    public SprintService(SprintRepository sprintRepository, UserStoryRepository userStoryRepository, SprintBacklogRepository sprintBacklogRepository, ProjectRepository projectRepository) {
         this.sprintRepository = sprintRepository;
         this.userStoryRepository = userStoryRepository;
         this.sprintBacklogRepository = sprintBacklogRepository;
+        this.projectRepository = projectRepository;
     }
 
     @Override
-    public Sprint createSprint(Sprint sprint) {
-        validateSprintData(sprint);
+    public SprintDTO createSprint(SprintDTO sprintDTO) {
 
-        SprintBacklog sprintBacklog = new SprintBacklog();
-        sprintBacklog.setSprint(sprint);
-        sprint.setSprintBacklog(sprintBacklog);
-        sprintBacklogRepository.save(sprintBacklog);
+        validateSprintData(sprintDTO);
 
-        return sprintRepository.save(sprint);
+        Sprint sprint = new Sprint();
+        sprint.setName(sprintDTO.getName());
+        sprint.setDescription(sprintDTO.getDescription());
+        sprint.setStartDate(sprintDTO.getStartDate());
+        sprint.setEndDate(sprintDTO.getEndDate());
+
+        Sprint savedSprint = sprintRepository.save(sprint);
+
+        return convertToDTO((savedSprint));
     }
 
     @Override
-    public List<Sprint> getAllSprints() {
-        return sprintRepository.findAll();
-    }
-
-    @Override
-    public Sprint getSprintById(Long id) {
-        return sprintRepository.findById(id)
+    public SprintDTO getSprintById(Long id) {
+        Sprint sprint = sprintRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sprint non trouvé avec l'ID: " + id));
+        return convertToDTO(sprint);
     }
 
     @Override
-    public Sprint updateSprint(Long id, Sprint sprint) {
+    public SprintDTO updateSprint(Long id, SprintDTO sprintDetails) {
         Sprint existingSprint = sprintRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sprint non trouvé avec l'ID: " + id));
-        validateSprintData(sprint);
 
-        existingSprint.setName(sprint.getName());
-        existingSprint.setDescription(sprint.getDescription());
-        existingSprint.setStartDate(sprint.getStartDate());
-        existingSprint.setEndDate(sprint.getEndDate());
+        validateSprintData(sprintDetails);
 
-        return sprintRepository.save(existingSprint);
+        existingSprint.setName(sprintDetails.getName());
+        existingSprint.setDescription(sprintDetails.getDescription());
+        existingSprint.setStartDate(sprintDetails.getStartDate());
+        existingSprint.setEndDate(sprintDetails.getEndDate());
+
+        return convertToDTO(sprintRepository.save(existingSprint));
+    }
+
+    public List<SprintDTO> getSprintsByProductBacklogId(Long productBacklogId) {
+        List<Sprint> sprints = sprintRepository.findByProductBacklogId(productBacklogId);
+
+        return sprints.stream()
+                .map(sprint -> convertToDTO(sprint))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -72,12 +87,8 @@ public class SprintService implements SprintInterface {
         sprintRepository.delete(sprint);
     }
 
-    @Override
-    public Sprint getSprintsByProjectId(Long projectId) {
-        return null;
-    }
 
-    private void validateSprintData(Sprint sprint) {
+    private void validateSprintData(SprintDTO sprint) {
         if (sprint.getName() == null || sprint.getName().isEmpty()) {
             throw new IllegalArgumentException("Le nom du sprint ne peut pas être vide");
         }
@@ -105,6 +116,21 @@ public class SprintService implements SprintInterface {
         if (daysBetween > 30) {
             throw new IllegalArgumentException("La durée du sprint ne peut pas dépasser 30 jours");
         }
+    }
+
+    public SprintDTO convertToDTO(Sprint sprint) {
+        SprintDTO dto = new SprintDTO();
+        dto.setId(sprint.getId());
+        dto.setName(sprint.getName());
+        dto.setDescription(sprint.getDescription());
+        dto.setStartDate(sprint.getStartDate());
+        dto.setEndDate(sprint.getEndDate());
+
+        if (sprint.getSprintBacklog() != null) {
+            dto.setSprintBacklogId(sprint.getSprintBacklog().getId());
+        }
+
+        return dto;
     }
 
 

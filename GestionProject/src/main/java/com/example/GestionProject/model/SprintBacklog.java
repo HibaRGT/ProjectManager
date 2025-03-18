@@ -26,4 +26,8 @@ public class SprintBacklog {
 
     @OneToMany(mappedBy = "sprintBacklog")
     private List<UserStory> userStories = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "product_backlog_id", nullable = false)
+    private ProductBacklog productBacklog;
 }

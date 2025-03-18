@@ -1,6 +1,10 @@
 package com.example.GestionProject.service.implementation;
 
+import com.example.GestionProject.dto.EpicDTO;
+import com.example.GestionProject.dto.UserStoryDTO;
 import com.example.GestionProject.model.Epic;
+import com.example.GestionProject.model.ProductBacklog;
+import com.example.GestionProject.model.Task;
 import com.example.GestionProject.model.UserStory;
 import com.example.GestionProject.repository.EpicRepository;
 import com.example.GestionProject.repository.ProductBacklogRepository;
@@ -11,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EpicService implements EpicInterface {
@@ -27,63 +32,76 @@ public class EpicService implements EpicInterface {
     }
 
     @Override
-    public Epic createEpic(Epic epic) {
-        validateEpic(epic);
-        return epicRepository.save(epic);
-    }
+    public EpicDTO createEpic(EpicDTO epicDTO) {
+        validateEpic(epicDTO);
 
-    @Override
-    public Epic getEpicById(Long id) {
-        if (!productBacklogRepository.existsById(id)) {
-            throw new RuntimeException("ProductBacklog introuvable avec l'ID: " + id);
+        if (epicDTO.getProductBacklogId() == null) {
+            throw new IllegalArgumentException("L'ID du ProductBacklog ne peut pas être nul");
         }
-        return epicRepository.findById(id)
+
+        ProductBacklog productBacklog = productBacklogRepository.findById(epicDTO.getProductBacklogId())
+                .orElseThrow(() -> new RuntimeException("Aucun ProductBacklog trouvé avec l'ID: " + epicDTO.getProductBacklogId()));
+
+
+        Epic epic = new Epic();
+        epic.setNom(epicDTO.getNom());
+        epic.setDescription(epicDTO.getDescription());
+        epic.setProductBacklog(productBacklog);
+
+        return convertToDTO(epicRepository.save(epic));
+    }
+
+    @Override
+    public EpicDTO getEpicById(Long id) {
+
+        Epic epic = epicRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Aucune Epic trouvée avec l'ID: " + id));
+        return convertToDTO(epic);
     }
 
     @Override
-    public List<Epic> getEpicsByProductBacklogId(Long productBacklogId) {
-        return epicRepository.findByProductBacklogId(productBacklogId);
+    public List<EpicDTO> getEpicsByProductBacklogId(Long productBacklogId) {
+        List<Epic> epics = epicRepository.findByProductBacklogId(productBacklogId);
+        return epics.stream().map(epic -> convertToDTO(epic)).collect(Collectors.toList());
     }
 
-    @Override
-    public List<Epic> getAllEpics() {
-        return epicRepository.findAll();
-    }
 
     @Override
-    public Epic updateEpic(Long id, Epic epic) {
+    public EpicDTO updateEpic(Long id, EpicDTO epicDTO) {
         Epic ep = epicRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException(("Aucune Epic trouvée avec l'ID: "+ id + " ")));
-        ep.setNom(epic.getNom());
-        ep.setDescription(epic.getDescription());
 
-        validateEpic(ep);
-        return epicRepository.save(ep);
+        validateEpic(epicDTO);
+
+        ep.setNom(epicDTO.getNom());
+        ep.setDescription(epicDTO.getDescription());
+
+        return convertToDTO(epicRepository.save(ep));
 
     }
 
     @Override
-    public UserStory addUserStoryToEpic(Long epicId, UserStory userStory) {
+    public UserStoryDTO addUserStoryToEpic(Long epicId, UserStoryDTO userStoryDTO) {
         Epic epic = epicRepository.findById(epicId)
                 .orElseThrow(() -> new RuntimeException("Aucune Epic trouvée avec l'ID: " + epicId));
 
-        userStory.setEpic(epic);
-        /////////////:
+
+        UserStory us = convertToEntity(userStoryDTO);
+
+        us.setEpic(epic);
+
         if (epic.getUserStories() == null) {
             epic.setUserStories(new ArrayList<>());
         }
-        epic.getUserStories().add(userStory);
+        epic.getUserStories().add(us);
 
-        userStoryRepository.save(userStory);
+        userStoryRepository.save(us);
         epicRepository.save(epic);
-        return userStory;
+
+        return convertToDTO(us);
     }
 
-    @Override
-    public List<UserStory> getUserStoriesByEpicId(Long epicId) {
-        return userStoryRepository.findByEpicId(epicId);
-    }
+
 
     @Override
     public void deleteEpic(Long id) {
@@ -93,14 +111,51 @@ public class EpicService implements EpicInterface {
         epicRepository.deleteById(id);
     }
 
-    private void validateEpic(Epic epic) {
-        if (epic.getNom() == null || epic.getNom().isEmpty()) {
+    private void validateEpic(EpicDTO epicDTO) {
+        if (epicDTO.getNom() == null || epicDTO.getNom().isEmpty()) {
             throw new IllegalArgumentException("Le titre de l'epic ne peut pas être vide");
         }
-        if (epic.getDescription() == null || epic.getDescription().isEmpty()) {
+        if (epicDTO.getDescription() == null || epicDTO.getDescription().isEmpty()) {
             throw new IllegalArgumentException("La description de l'epic ne peut pas être vide");
         }
     }
 
+    public EpicDTO convertToDTO(Epic epic) {
+        return new EpicDTO(
+          epic.getId(),
+          epic.getNom(),
+          epic.getDescription(),
+          epic.getProductBacklog() != null ? epic.getProductBacklog().getId() : null,
+          epic.getUserStories() != null ?
+                  epic.getUserStories().stream().map(UserStory::getId).collect(Collectors.toList())
+                  : null
+        );
+    }
+
+    private UserStory convertToEntity(UserStoryDTO userStoryDTO) {
+        UserStory userStory = new UserStory();
+        userStory.setId(userStoryDTO.getId());
+        userStory.setTitre(userStoryDTO.getTitre());
+        userStory.setDescription(userStoryDTO.getDescription());
+        userStory.setPriorite(userStoryDTO.getPriorite());
+        userStory.setStatut(userStoryDTO.getStatut());
+        return userStory;
+    }
+
+    public UserStoryDTO convertToDTO(UserStory userStory) {
+        return new UserStoryDTO(
+                userStory.getId(),
+                userStory.getTitre(),
+                userStory.getDescription(),
+                userStory.getPriorite(),
+                userStory.getStatut(),
+                userStory.getEpic() != null ? userStory.getEpic().getId() : null,
+                userStory.getProductBacklog() != null ? userStory.getProductBacklog().getId() : null,
+                userStory.getSprintBacklog() != null ? userStory.getSprintBacklog().getId() : null,
+                userStory.getTasks() != null ?
+                        userStory.getTasks().stream().map(Task::getId).collect(Collectors.toList())
+                        : null
+        );
+    }
 
     }

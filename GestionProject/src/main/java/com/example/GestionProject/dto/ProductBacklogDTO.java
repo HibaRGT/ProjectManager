@@ -1,8 +1,7 @@
 package com.example.GestionProject.dto;
 
-import com.example.GestionProject.model.Epic;
-import com.example.GestionProject.model.Project;
-import com.example.GestionProject.model.UserStory;
+import com.example.GestionProject.model.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -23,4 +23,7 @@ public class ProductBacklogDTO implements Serializable {
     private List<Long> epicIds;
     private List<Long> userStoryIds;
     private Long projectId;
+    private List<Long> sprintBacklogIds;
+
+
 }

@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Getter
@@ -24,6 +23,8 @@ public class Sprint {
     private String description;
     private LocalDate startDate;
     private LocalDate endDate;
+
+
 
     @OneToOne(mappedBy = "sprint", cascade = CascadeType.ALL)
     private SprintBacklog sprintBacklog;

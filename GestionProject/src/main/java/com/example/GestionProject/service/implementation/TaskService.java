@@ -1,6 +1,7 @@
 package com.example.GestionProject.service.implementation;
 
 import com.example.GestionProject.dto.TaskDTO;
+import com.example.GestionProject.dto.UserStoryDTO;
 import com.example.GestionProject.model.Task;
 import com.example.GestionProject.model.TaskStatus;
 import com.example.GestionProject.model.UserStory;
@@ -11,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskService implements TaskInterface {
@@ -24,13 +25,8 @@ public class TaskService implements TaskInterface {
         this.userStoryRepository = userStoryRepository;
     }
 
-    public Task createTask(Task task) {
-        validateTaskData(task);
-        return taskRepository.save(task);
-    }
-
     @Override
-    public Task createTaskForUserStory(Long userStoryId, Task task) {
+    public TaskDTO createTaskForUserStory(Long userStoryId, TaskDTO taskDTO) {
         UserStory userStory = userStoryRepository.findById(userStoryId)
                 .orElseThrow(() -> new RuntimeException("UserStory introuvable!"));
 
@@ -38,56 +34,60 @@ public class TaskService implements TaskInterface {
             throw new IllegalStateException("Impossible d'ajouter des tâches à une User Story qui n'est pas dans un Sprint");
         }
 
-        validateTaskData(task);
+        validateTaskData(taskDTO);
+
+        Task task = new Task();
+        task.setTitle(taskDTO.getTitle());
+        task.setDescription(taskDTO.getDescription());
+        task.setStatus(taskDTO.getStatus() != null ? taskDTO.getStatus() : TaskStatus.TO_DO);
         task.setUserStory(userStory);
 
-        if (task.getStatus() == null) {
-            task.setStatus(TaskStatus.TO_DO);
-        }
         Task savedTask = taskRepository.save(task);
-
-        userStory.getTasks().add(task);
-        userStoryRepository.save(userStory);
-        return savedTask;
+        return convertToDTO(savedTask);
     }
 
     @Override
-    public Task getTaskById(Long taskId) {
-        return taskRepository.findById(taskId)
+    public TaskDTO getTaskById(Long taskId) {
+        Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'ID: " + taskId));
+        return convertToDTO(task);
     }
 
     @Override
-    public List<Task> getTasksByUserStoryId(Long userStoryId) {
+    public List<TaskDTO> getTasksByUserStoryId(Long userStoryId) {
         UserStory userStory = userStoryRepository.findById(userStoryId)
                 .orElseThrow(() -> new RuntimeException("User Story non trouvée avec l'ID: " + userStoryId));
 
-        return userStory.getTasks();
+        List<Task> tasks = userStory.getTasks();
+        return tasks.stream().map(task -> convertToDTO(task)).collect(Collectors.toList());
     }
 
     @Override
-    public Task updateTask(Long taskId, Task updatedTask) {
+    public TaskDTO updateTask(Long taskId, TaskDTO updatedTaskDTO) {
         Task existingTask = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'ID: " + taskId));
 
-        validateTaskData(updatedTask);
+        validateTaskData(updatedTaskDTO);
 
-        existingTask.setTitle(updatedTask.getTitle());
-        existingTask.setDescription(updatedTask.getDescription());
+        existingTask.setTitle(updatedTaskDTO.getTitle());
+        existingTask.setDescription(updatedTaskDTO.getDescription());
 
-        return taskRepository.save(existingTask);
+        if(updatedTaskDTO.getStatus() != null && updatedTaskDTO.getStatus() != existingTask.getStatus()){
+            updateTaskStatus(taskId, updatedTaskDTO.getStatus());
+        }
+
+        Task task = taskRepository.save(existingTask);
+
+        return convertToDTO(task);
     }
 
-    @Override
-    public Task getTasksBySprintId(Long sprintId) {
-        return null;
-    }
-
-    public Task updateTaskStatus(Long taskId, TaskStatus status) {
+    public TaskDTO updateTaskStatus(Long taskId, TaskStatus status) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Tache introuvable!"));
+
         task.setStatus(status);
-        return taskRepository.save(task);
+
+        return convertToDTO(taskRepository.save(task));
     }
 
     @Override
@@ -104,17 +104,18 @@ public class TaskService implements TaskInterface {
         taskRepository.deleteById(taskId);
     }
 
+
     //validation
-    private void validateTaskData(Task task) {
-        if (task.getTitle() == null || task.getTitle().isEmpty()) {
+    private void validateTaskData(TaskDTO taskDTO) {
+        if (taskDTO.getTitle() == null || taskDTO.getTitle().isEmpty()) {
             throw new IllegalArgumentException("Le titre de la tâche ne peut pas être vide");
         }
 
-        if (task.getDescription() == null || task.getDescription().isEmpty()) {
+        if (taskDTO.getDescription() == null || taskDTO.getDescription().isEmpty()) {
             throw new IllegalArgumentException("La description de la tâche ne peut pas être vide");
         }
 
-        if (task.getStatus() == null) {
+        if (taskDTO.getStatus() == null) {
             throw new IllegalArgumentException("Le status de la tâche ne peut pas être vide");
         }
     }

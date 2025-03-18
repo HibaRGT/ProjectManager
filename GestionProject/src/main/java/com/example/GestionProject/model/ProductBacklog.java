@@ -1,5 +1,6 @@
 package com.example.GestionProject.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -26,8 +27,12 @@ public class ProductBacklog {
     @OneToMany(mappedBy = "productBacklog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserStory> userStories;
 
+    @OneToMany(mappedBy = "productBacklog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SprintBacklog> sprintBacklogs;
+
     @OneToOne
     @JoinColumn(name = "project_id")
+    @JsonBackReference
     private Project project;
 
 }

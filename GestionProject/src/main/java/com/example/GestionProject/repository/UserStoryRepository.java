@@ -10,4 +10,6 @@ import java.util.List;
 public interface UserStoryRepository extends JpaRepository<UserStory, Long> {
     List<UserStory> findByProductBacklogId(Long backlogId);
     List<UserStory> findByEpicId(Long epicId);
+    List<UserStory> findByTaskId(Long taskId);
+    List<UserStory> findBySprintBacklogId(Long sprintBacklogId);
 }
