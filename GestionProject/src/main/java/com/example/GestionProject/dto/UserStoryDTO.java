@@ -19,7 +19,7 @@ public class UserStoryDTO implements Serializable {
     private int priorite;
     private StatutEnum statut;
     private Long epicId;
-    private ProductBacklog productBacklog;
+    private Long productBacklogId;
     private Long sprintBacklogId;
     private List<Long> taskIds;
 }
