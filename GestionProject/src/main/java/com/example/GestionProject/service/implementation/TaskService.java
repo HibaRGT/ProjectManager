@@ -1,5 +1,6 @@
 package com.example.GestionProject.service.implementation;
 
+import com.example.GestionProject.dto.TaskDTO;
 import com.example.GestionProject.model.Task;
 import com.example.GestionProject.model.TaskStatus;
 import com.example.GestionProject.model.UserStory;
@@ -116,5 +117,16 @@ public class TaskService implements TaskInterface {
         if (task.getStatus() == null) {
             throw new IllegalArgumentException("Le status de la tâche ne peut pas être vide");
         }
+    }
+
+
+    public TaskDTO convertToDTO(Task task) {
+        return new TaskDTO(
+                task.getId(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getStatus(),
+                task.getUserStory() != null ? task.getUserStory().getId() : null
+        );
     }
 }
