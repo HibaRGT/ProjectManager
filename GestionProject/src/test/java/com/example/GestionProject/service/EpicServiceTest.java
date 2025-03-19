@@ -178,6 +178,4 @@ class EpicServiceTest {
 
         assertEquals("Aucune Epic trouvée avec l'ID: 1", exception.getMessage().trim());  // Utilisation de trim pour éviter les espaces
     }
-
-
 }
