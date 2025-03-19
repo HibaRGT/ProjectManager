@@ -79,19 +79,6 @@ public class ProjectService implements ProjectInterface {
         Project updatedProject = projectRepository.save(pr);
         return convertToDTO(updatedProject);
     }
-//
-//    @Override
-//    public Project addProductBacklogToProject(Long projectId, ProductBacklog productBacklog) {
-//        Project project = projectRepository.findById(projectId)
-//                .orElseThrow(() -> new EntityNotFoundException("Project introuvable avec ID: " + projectId));
-//
-//        if (productBacklog.getId() == null || !productBacklogRepository.existsById(productBacklog.getId())) {
-//            productBacklog = productBacklogRepository.save(productBacklog);
-//        }
-//
-//        project.setProductBacklog(productBacklog);
-//        return projectRepository.save(project);
-//    }
 
 
     private void validateProject(ProjectDTO projectDTO) {

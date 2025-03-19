@@ -1,22 +1,29 @@
 package com.example.GestionProject.dto;
 
 import com.example.GestionProject.model.TaskStatus;
-import com.example.GestionProject.model.UserStory;
-import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
-
 import java.io.Serializable;
-@Data
-@NoArgsConstructor
+
+@Getter @Setter
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 public class TaskDTO implements Serializable {
 
+    @NotNull(message = "id may not be null")
     private Long id;
+
+    @NotBlank(message = "title may not be blank")
     private String title;
+
+    @NotBlank(message = "Description may not be blank")
     private String description;
+
+    @NotNull(message = "status may not be null")
     private TaskStatus status;
 
+    @NotNull(message = "The userStory Id may not be null")
     private Long userStoryId;
 
 }

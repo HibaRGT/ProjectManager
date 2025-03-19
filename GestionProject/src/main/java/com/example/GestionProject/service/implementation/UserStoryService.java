@@ -5,9 +5,11 @@ import com.example.GestionProject.dto.UserStoryDTO;
 import com.example.GestionProject.model.*;
 import com.example.GestionProject.repository.*;
 import com.example.GestionProject.service.interfaces.UserStoryInterface;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,13 +19,20 @@ public class UserStoryService implements UserStoryInterface {
     private final ProductBacklogRepository productBacklogRepository;
     private final SprintBacklogRepository sprintBacklogRepository;
     private final SprintRepository sprintRepository;
+    private final EpicRepository epicRepository;
 
     @Autowired
-    public UserStoryService(UserStoryRepository userStoryRepository, ProductBacklogRepository productBacklogRepository, TaskRepository taskRepository, SprintBacklogRepository sprintBacklogRepository, SprintRepository sprintRepository) {
+    public UserStoryService(UserStoryRepository userStoryRepository,
+                            ProductBacklogRepository productBacklogRepository,
+                            TaskRepository taskRepository,
+                            SprintBacklogRepository sprintBacklogRepository,
+                            SprintRepository sprintRepository,
+                            EpicRepository epicRepository) {
         this.UserStoryRepository = userStoryRepository;
         this.productBacklogRepository = productBacklogRepository;
         this.sprintBacklogRepository = sprintBacklogRepository;
         this.sprintRepository = sprintRepository;
+        this.epicRepository = epicRepository;
     }
 
     @Override
@@ -113,6 +122,29 @@ public class UserStoryService implements UserStoryInterface {
 
         UserStory us = UserStoryRepository.save(userStory);
         sprintBacklogRepository.save(sprintBacklog);
+        return convertToDTO(us);
+    }
+
+    @Override
+    public UserStoryDTO addUserStoryToEpic(Long epicId, Long userStoryId) {
+        Epic epic = epicRepository.findById(epicId)
+                .orElseThrow(() -> new RuntimeException("Aucune Epic trouvée avec l'ID: " + epicId));
+
+
+        UserStory us = UserStoryRepository.findById(userStoryId)
+                .orElseThrow(() -> new RuntimeException("UserStory introuvable"));
+
+        us.setEpic(epic);
+
+        if (epic.getUserStories() == null) {
+            epic.setUserStories(new ArrayList<>());
+        }
+
+        epic.getUserStories().add(us);
+
+        UserStoryRepository.save(us);
+        epicRepository.save(epic);
+
         return convertToDTO(us);
     }
 

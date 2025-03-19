@@ -1,25 +1,23 @@
 package com.example.GestionProject.dto;
 
-import com.example.GestionProject.model.ProductBacklog;
-import com.example.GestionProject.model.Sprint;
-import com.example.GestionProject.model.UserStory;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
-@Data
-@NoArgsConstructor
+@Getter @Setter
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 public class SprintBacklogDTO implements Serializable {
+
+    @NotNull(message = "id may not be null")
     private Long id;
+
+    @NotNull(message = "sprint Id may not be null")
     private Long sprintId;
+
+    @NotNull(message = "List of userStories may not be null")
     private List<Long> userStoryIds;
+
     private Long productBacklogId;
 }
