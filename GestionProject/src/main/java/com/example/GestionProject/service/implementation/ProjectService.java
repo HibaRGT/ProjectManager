@@ -19,12 +19,10 @@ import java.util.stream.Collectors;
 public class ProjectService implements ProjectInterface {
 
     private final ProjectRepository projectRepository;
-    private final ProductBacklogRepository productBacklogRepository;
 
     @Autowired
-    public ProjectService(ProjectRepository pr, ProductBacklogRepository pbr){
+    public ProjectService(ProjectRepository pr){
         this.projectRepository = pr;
-        this.productBacklogRepository = pbr;
     }
 
     @Override
@@ -32,9 +30,11 @@ public class ProjectService implements ProjectInterface {
     public ProjectDTO createProject(ProjectDTO projectDTO) {
         validateProject(projectDTO);
 
-        Project project = new Project();
-        project.setNom(projectDTO.getNom());
-        project.setDescription(projectDTO.getDescription());
+        Project project = Project.builder()
+                .nom(projectDTO.getNom())
+                .description(projectDTO.getDescription())
+                .build();
+
 
         Project savedProject = projectRepository.save(project);
         return convertToDTO(savedProject);
@@ -50,16 +50,17 @@ public class ProjectService implements ProjectInterface {
 
     @Override
     public ProjectDTO getProjectById(Long id) {
-        if (!projectRepository.existsById(id)) {
-            throw new RuntimeException("Project introuvable avec l'ID: " + id);
-        }
+        validateProjectId(id);
+
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Aucun projet trouvé avec l'ID: " + id));
+
         return convertToDTO(project);
     }
 
     @Override
     public void deleteProject(Long id) {
+        validateProjectId(id);
         if (!projectRepository.existsById(id)) {
             throw new RuntimeException("Project non trouvé avec l'ID: " + id);
         }
@@ -68,6 +69,7 @@ public class ProjectService implements ProjectInterface {
 
     @Override
     public ProjectDTO updateProject(Long id, ProjectDTO projectDTO) {
+        validateProjectId(id);
         Project pr = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project non trouvé avec l'ID: " + id));
 
@@ -86,15 +88,22 @@ public class ProjectService implements ProjectInterface {
             throw new IllegalArgumentException("Le titre du projet ne peut pas être vide");
         }
         if (projectDTO.getDescription() == null || projectDTO.getDescription().isEmpty()) {
-            throw new IllegalArgumentException("La description du project ne peut pas être vide");
+            throw new IllegalArgumentException("La description du projet ne peut pas être vide");
+        }
+    }
+
+    private void validateProjectId(Long id){
+        if(id == null){
+            throw new IllegalArgumentException("L'ID du projet ne peut pas être null");
         }
     }
 
     private ProjectDTO convertToDTO(Project project) {
-        ProjectDTO dto = new ProjectDTO();
-        dto.setId(project.getId());
-        dto.setNom(project.getNom());
-        dto.setDescription(project.getDescription());
+        ProjectDTO dto = ProjectDTO.builder()
+                .id(project.getId())
+                .nom(project.getNom())
+                .description(project.getDescription())
+                .build();
 
         if (project.getProductBacklog() != null) {
             dto.setProductBacklogId(project.getProductBacklog().getId());

@@ -35,11 +35,12 @@ public class SprintService implements SprintInterface {
 
         validateSprintData(sprintDTO);
 
-        Sprint sprint = new Sprint();
-        sprint.setName(sprintDTO.getName());
-        sprint.setDescription(sprintDTO.getDescription());
-        sprint.setStartDate(sprintDTO.getStartDate());
-        sprint.setEndDate(sprintDTO.getEndDate());
+        Sprint sprint = Sprint.builder()
+                .name(sprintDTO.getName())
+                .description(sprintDTO.getDescription())
+                .startDate(sprintDTO.getStartDate())
+                .endDate(sprintDTO.getEndDate())
+                .build();
 
         Sprint savedSprint = sprintRepository.save(sprint);
 
@@ -48,6 +49,7 @@ public class SprintService implements SprintInterface {
 
     @Override
     public SprintDTO getSprintById(Long id) {
+        validateSprintId(id);
         Sprint sprint = sprintRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sprint non trouvé avec l'ID: " + id));
         return convertToDTO(sprint);
@@ -55,6 +57,7 @@ public class SprintService implements SprintInterface {
 
     @Override
     public SprintDTO updateSprint(Long id, SprintDTO sprintDetails) {
+        validateSprintId(id);
         Sprint existingSprint = sprintRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sprint non trouvé avec l'ID: " + id));
 
@@ -78,9 +81,12 @@ public class SprintService implements SprintInterface {
 
     @Override
     public void deleteSprint(Long id) {
-        Sprint sprint = sprintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sprint non trouvé avec l'ID: " + id));
-        sprintRepository.delete(sprint);
+        validateSprintId(id);
+
+        if(!sprintRepository.existsById(id)) {
+            throw new RuntimeException("Sprint non trouvée avec l'ID: "+ id);
+        }
+        sprintRepository.deleteById(id);
     }
 
 
@@ -114,13 +120,20 @@ public class SprintService implements SprintInterface {
         }
     }
 
+    private void validateSprintId(Long id){
+        if(id == null){
+            throw new IllegalArgumentException("L'ID du sprint ne peut pas être null");
+        }
+    }
+
     public SprintDTO convertToDTO(Sprint sprint) {
-        SprintDTO dto = new SprintDTO();
-        dto.setId(sprint.getId());
-        dto.setName(sprint.getName());
-        dto.setDescription(sprint.getDescription());
-        dto.setStartDate(sprint.getStartDate());
-        dto.setEndDate(sprint.getEndDate());
+        SprintDTO dto = SprintDTO.builder()
+                .id(sprint.getId())
+                .name(sprint.getName())
+                .description(sprint.getDescription())
+                .startDate(sprint.getStartDate())
+                .endDate(sprint.getEndDate())
+                .build();
 
         if (sprint.getSprintBacklog() != null) {
             dto.setSprintBacklogId(sprint.getSprintBacklog().getId());

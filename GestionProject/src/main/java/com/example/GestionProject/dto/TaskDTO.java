@@ -9,6 +9,7 @@ import java.io.Serializable;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class TaskDTO implements Serializable {
 
     @NotNull(message = "id may not be null")

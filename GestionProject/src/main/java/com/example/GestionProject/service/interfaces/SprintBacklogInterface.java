@@ -11,5 +11,4 @@ public interface SprintBacklogInterface {
     public SprintBacklogDTO getSprintBacklogBySprintId(Long sprint_id);
     public SprintBacklogDTO createSprintBacklog(SprintBacklogDTO sprintBacklogDTO);
     public void deleteSprintBacklogById(Long sprint_backlog_id);
-
 }

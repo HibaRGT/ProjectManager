@@ -3,11 +3,14 @@ package com.example.GestionProject.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
+@Builder
 public class ProductBacklog {
 
     @Id

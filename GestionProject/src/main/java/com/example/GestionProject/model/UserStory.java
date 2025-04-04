@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor @AllArgsConstructor
 @ToString(exclude = {"epic", "productBacklog"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Builder
 public class UserStory {
 
     @Id

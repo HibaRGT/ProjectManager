@@ -7,6 +7,7 @@ import java.util.List;
 @Entity
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
+@Builder
 public class Epic {
 
     @Id

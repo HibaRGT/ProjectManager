@@ -11,6 +11,7 @@ import java.io.Serializable;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ProjectDTO implements Serializable {
 
     @NotNull(message = "id may not be null")

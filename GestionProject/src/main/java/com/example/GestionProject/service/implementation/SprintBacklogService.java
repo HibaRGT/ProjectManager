@@ -39,15 +39,17 @@ public class SprintBacklogService implements SprintBacklogInterface{
 
 
     @Override
-    public SprintBacklogDTO getSprintBacklogById(Long sprint_backlog_id) {
-        SprintBacklog sp = sprintBacklogrepository.findById(sprint_backlog_id)
+    public SprintBacklogDTO getSprintBacklogById(Long id) {
+        validateSprintBacklogId(id);
+        SprintBacklog sp = sprintBacklogrepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("SprintBacklog introuvable"));
         return convertToDTO(sp);
     }
 
     @Override
-    public SprintBacklogDTO getSprintBacklogBySprintId(Long sprint_id) {
-        Sprint sprint = sprintRepository.findById(sprint_id)
+    public SprintBacklogDTO getSprintBacklogBySprintId(Long id) {
+        validateSprintId(id);
+        Sprint sprint = sprintRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Sprint introuvable"));
 
         SprintBacklog sp = sprint.getSprintBacklog();
@@ -58,10 +60,9 @@ public class SprintBacklogService implements SprintBacklogInterface{
 
     @Override
     public SprintBacklogDTO createSprintBacklog(SprintBacklogDTO sprintBacklogDTO) {
-
         validateSprintBacklogData(sprintBacklogDTO);
 
-        SprintBacklog sprintBacklog = new SprintBacklog();
+        SprintBacklog sprintBacklog = SprintBacklog.builder().build();
 
         Sprint sprint = sprintRepository.findById(sprintBacklogDTO.getSprintId())
                 .orElseThrow(() -> new RuntimeException("Sprint introuvable"));
@@ -78,8 +79,9 @@ public class SprintBacklogService implements SprintBacklogInterface{
     }
 
     @Override
-    public void deleteSprintBacklogById(Long sprint_backlog_id) {
-        SprintBacklog sp = sprintBacklogrepository.findById(sprint_backlog_id)
+    public void deleteSprintBacklogById(Long id) {
+        validateSprintBacklogId(id);
+        SprintBacklog sp = sprintBacklogrepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("SprintBacklog introuvable"));
 
         sprintBacklogrepository.delete(sp);
@@ -87,17 +89,17 @@ public class SprintBacklogService implements SprintBacklogInterface{
 
 
     public SprintBacklogDTO convertToDTO(SprintBacklog sprintBLOG){
-        return new SprintBacklogDTO(
-                sprintBLOG.getId(),
-                sprintBLOG.getSprint() != null ? sprintBLOG.getSprint().getId() : null,
-                sprintBLOG.getUserStories() != null
+        return SprintBacklogDTO.builder()
+                .id(sprintBLOG.getId())
+                .sprintId(sprintBLOG.getSprint() != null ? sprintBLOG.getSprint().getId() : null)
+                .userStoryIds(sprintBLOG.getUserStories() != null
                         ? sprintBLOG.getUserStories().stream().map(UserStory::getId).collect(Collectors.toList())
-                        : new ArrayList<Long>(),
-                sprintBLOG.getProductBacklog() != null ? sprintBLOG.getProductBacklog().getId() : null
-        );
+                        : new ArrayList<Long>())
+                .productBacklogId(sprintBLOG.getProductBacklog() != null ? sprintBLOG.getProductBacklog().getId() : null)
+                .build();
     }
 
-    public void validateSprintBacklogData(SprintBacklogDTO sprintBacklogDTO){
+    private void validateSprintBacklogData(SprintBacklogDTO sprintBacklogDTO){
         if (sprintBacklogDTO.getSprintId() == null) {
             throw new IllegalArgumentException("Le sprintBacklog n'est lié à aucun sprint");
         }
@@ -105,7 +107,17 @@ public class SprintBacklogService implements SprintBacklogInterface{
         if(sprintBacklogDTO.getProductBacklogId() == null){
             throw new IllegalArgumentException("Le sprintBacklog n'est lié à aucun ProductBacklog");
         }
+    }
 
+    private void validateSprintBacklogId(Long id){
+        if(id == null){
+            throw new RuntimeException("L'ID du sprint backlog ne peut pas etre null");
+        }
+    }
 
+    private void validateSprintId(Long id){
+        if(id == null){
+            throw new RuntimeException("L'ID du sprint ne peut pas etre null");
+        }
     }
 }

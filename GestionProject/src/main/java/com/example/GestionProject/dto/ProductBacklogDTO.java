@@ -4,12 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ProductBacklogDTO implements Serializable {
 
     @NotNull(message = "id may not be null")
@@ -22,15 +24,18 @@ public class ProductBacklogDTO implements Serializable {
     private String description;
 
     @NotNull(message = "List of epic Ids may not be null")
-    private List<Long> epicIds;
+    @Builder.Default
+    private List<Long> epicIds = new ArrayList<>();
 
     @NotNull(message = "List of userStories may not be null")
-    private List<Long> userStoryIds;
+    @Builder.Default
+    private List<Long> userStoryIds = new ArrayList<>();
 
     private Long projectId;
 
     @NotNull(message = "List of sprintBacklog Ids may not be null")
-    private List<Long> sprintBacklogIds;
+    @Builder.Default
+    private List<Long> sprintBacklogIds = new ArrayList<>();
 
 
 }

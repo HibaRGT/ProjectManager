@@ -27,6 +27,7 @@ public class TaskService implements TaskInterface {
 
     @Override
     public TaskDTO createTaskForUserStory(Long userStoryId, TaskDTO taskDTO) {
+        validateUserStoryId(userStoryId);
         UserStory userStory = userStoryRepository.findById(userStoryId)
                 .orElseThrow(() -> new RuntimeException("UserStory introuvable!"));
 
@@ -36,11 +37,12 @@ public class TaskService implements TaskInterface {
 
         validateTaskData(taskDTO);
 
-        Task task = new Task();
-        task.setTitle(taskDTO.getTitle());
-        task.setDescription(taskDTO.getDescription());
-        task.setStatus(taskDTO.getStatus() != null ? taskDTO.getStatus() : TaskStatus.TO_DO);
-        task.setUserStory(userStory);
+        Task task = Task.builder()
+                .title(taskDTO.getTitle())
+                .description(taskDTO.getDescription())
+                .status(taskDTO.getStatus() != null ? taskDTO.getStatus() : TaskStatus.TO_DO)
+                .userStory(userStory)
+                .build();
 
         Task savedTask = taskRepository.save(task);
         return convertToDTO(savedTask);
@@ -48,6 +50,8 @@ public class TaskService implements TaskInterface {
 
     @Override
     public TaskDTO getTaskById(Long taskId) {
+        validateTaskId(taskId);
+
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'ID: " + taskId));
         return convertToDTO(task);
@@ -55,6 +59,8 @@ public class TaskService implements TaskInterface {
 
     @Override
     public List<TaskDTO> getTasksByUserStoryId(Long userStoryId) {
+        validateUserStoryId(userStoryId);
+
         UserStory userStory = userStoryRepository.findById(userStoryId)
                 .orElseThrow(() -> new RuntimeException("User Story non trouvée avec l'ID: " + userStoryId));
 
@@ -64,6 +70,8 @@ public class TaskService implements TaskInterface {
 
     @Override
     public TaskDTO updateTask(Long taskId, TaskDTO updatedTaskDTO) {
+        validateTaskId(taskId);
+
         Task existingTask = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'ID: " + taskId));
 
@@ -82,6 +90,7 @@ public class TaskService implements TaskInterface {
     }
 
     public TaskDTO updateTaskStatus(Long taskId, TaskStatus status) {
+        validateTaskId(taskId);
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Tache introuvable!"));
 
@@ -92,6 +101,7 @@ public class TaskService implements TaskInterface {
 
     @Override
     public void deleteTask(Long taskId) {
+        validateTaskId(taskId);
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec l'ID: " + taskId));
 
@@ -120,14 +130,26 @@ public class TaskService implements TaskInterface {
         }
     }
 
+    private void validateTaskId(Long id){
+        if(id == null){
+            throw new IllegalArgumentException("L'ID du task ne peut pas etre null");
+        }
+    }
+
+    private void validateUserStoryId(Long id){
+        if(id == null){
+            throw new IllegalArgumentException("L'ID du userStory ne peut pas etre null");
+        }
+    }
+
 
     public TaskDTO convertToDTO(Task task) {
-        return new TaskDTO(
-                task.getId(),
-                task.getTitle(),
-                task.getDescription(),
-                task.getStatus(),
-                task.getUserStory() != null ? task.getUserStory().getId() : null
-        );
+        return TaskDTO.builder()
+                .id(task.getId())
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .status(task.getStatus())
+                .userStoryId( task.getUserStory() != null ? task.getUserStory().getId() : null)
+                .build();
     }
 }

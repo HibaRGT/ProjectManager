@@ -18,7 +18,7 @@ public interface UserStoryInterface {
     public UserStoryDTO updateUserStoryStatus(Long id, StatutEnum newStatus);
     public UserStoryDTO updateUserStoryPriority(Long id, int newPriority);
     public UserStoryDTO removeUserStoryFromSprintBacklog(Long sprintBacklogId, Long userStoryId);
-    public UserStoryDTO addUserStoryToSprintBacklogBySprintBacklogId(Long sprintBacklogId, Long userStoryId);
-    public UserStoryDTO addUserStoryToSprintBacklogBySprintId(Long sprintId, Long userStoryId);
+    public UserStoryDTO addUserStoryToSprintBacklogById(Long sprintBacklogId, Long userStoryId);
+    //public UserStoryDTO addUserStoryToSprintBacklogBySprintId(Long sprintId, Long userStoryId);
     public UserStoryDTO addUserStoryToEpic(Long epicId, Long userStoryId);
 }

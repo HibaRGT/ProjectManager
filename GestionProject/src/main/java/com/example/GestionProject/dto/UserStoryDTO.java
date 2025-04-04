@@ -7,11 +7,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UserStoryDTO implements Serializable {
 
     @NotNull(message = "id may not be null")
@@ -35,5 +37,6 @@ public class UserStoryDTO implements Serializable {
     private Long sprintBacklogId;
 
     @NotNull(message = "The list of taskIds may not be null")
-    private List<Long> taskIds;
+    @Builder.Default
+    private List<Long> taskIds = new ArrayList<>();
 }

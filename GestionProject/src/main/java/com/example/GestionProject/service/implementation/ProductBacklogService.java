@@ -28,9 +28,10 @@ public class ProductBacklogService implements ProductBacklogInterface {
     public ProductBacklogDTO createProductBacklog(ProductBacklogDTO backlog) {
         validateProductBacklog(backlog);
 
-        ProductBacklog pb = new ProductBacklog();
-        pb.setNom(backlog.getNom());
-        pb.setDescription(backlog.getDescription());
+        ProductBacklog pb = ProductBacklog.builder()
+                .nom(backlog.getNom())
+                .description(backlog.getDescription())
+                .build();
 
         if (backlog.getProjectId() != null) {
             Project project = projectRepository.findById(backlog.getProjectId())
@@ -47,6 +48,8 @@ public class ProductBacklogService implements ProductBacklogInterface {
 
     @Override
     public ProductBacklogDTO getProductBacklogById(Long id) {
+        validateProductBacklogId(id);
+
         ProductBacklog backlog = productBacklogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ProductBacklog non trouvé avec l'ID: " + id));
         return convertToDTO(backlog);
@@ -54,6 +57,9 @@ public class ProductBacklogService implements ProductBacklogInterface {
 
     @Override
     public ProductBacklogDTO getProductBacklogByProjectId(Long id) {
+        if(id == null){
+            throw new IllegalArgumentException("L'ID du projet ne peut pas être null");
+        }
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'ID: " + id));
         ProductBacklog pb = project.getProductBacklog();
@@ -70,6 +76,8 @@ public class ProductBacklogService implements ProductBacklogInterface {
 
     @Override
     public void deleteProductBacklog(Long id) {
+        validateProductBacklogId(id);
+
         if (!productBacklogRepository.existsById(id)) {
             throw new RuntimeException("ProductBacklog non trouvée avec l'ID: " + id);
         }
@@ -78,6 +86,8 @@ public class ProductBacklogService implements ProductBacklogInterface {
 
     @Override
     public ProductBacklogDTO updateProductBacklog(Long id, ProductBacklogDTO backlogDTO) {
+        validateProductBacklogId(id);
+
         ProductBacklog existingBacklog = productBacklogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ProductBacklog non trouvé avec l'ID: " + id));
 
@@ -86,7 +96,7 @@ public class ProductBacklogService implements ProductBacklogInterface {
         existingBacklog.setNom(backlogDTO.getNom());
         existingBacklog.setDescription(backlogDTO.getDescription());
 
-            if (backlogDTO.getProjectId() != null) {
+        if (backlogDTO.getProjectId() != null) {
             Project project = projectRepository.findById(backlogDTO.getProjectId())
                     .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'ID: " + backlogDTO.getProjectId()));
             existingBacklog.setProject(project);
@@ -95,6 +105,8 @@ public class ProductBacklogService implements ProductBacklogInterface {
         ProductBacklog updatedBacklog = productBacklogRepository.save(existingBacklog);
         return convertToDTO(updatedBacklog);
     }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     private void validateProductBacklog(ProductBacklogDTO backlog) {
         if (backlog.getNom() == null || backlog.getNom().isEmpty()) {
@@ -105,38 +117,31 @@ public class ProductBacklogService implements ProductBacklogInterface {
         }
     }
 
-    public ProductBacklogDTO convertToDTO(ProductBacklog backlog) {
-        return new ProductBacklogDTO(
-                backlog.getId(),
-                backlog.getNom(),
-                backlog.getDescription(),
-                backlog.getEpics() != null ?
-                        backlog.getEpics().stream().map(Epic::getId).collect(Collectors.toList())
-                        : new ArrayList<Long>(),
-                backlog.getUserStories()!= null ?
-                        backlog.getUserStories().stream().map(UserStory::getId).collect(Collectors.toList())
-                        : new ArrayList<Long>(),
-                backlog.getProject() != null ? backlog.getProject().getId() : null,
-                backlog.getSprintBacklogs() != null
-                        ? backlog.getSprintBacklogs().stream().map(SprintBacklog::getId).collect(Collectors.toList())
-                        : new ArrayList<Long>()
-                );
+    private void validateProductBacklogId(Long id){
+        if(id == null){
+            throw new IllegalArgumentException("L'ID du produit backlog ne peut pas être null");
+        }
     }
 
-    /// //////////////////////////////////////////////
-//    public ProductBacklog convertToEntity(ProductBacklogDTO dto) {
-//        ProductBacklog entity = new ProductBacklog();
-//        entity.setId(dto.getId());
-//        entity.setNom(dto.getNom());
-//        entity.setDescription(dto.getDescription());
-//
-//        if (dto.getProjectId() != null) {
-//            Project project = projectRepository.findById(dto.getProjectId())
-//                    .orElseThrow(() -> new RuntimeException("Projet non trouvé avec l'ID: " + dto.getProjectId()));
-//            entity.setProject(project);
-//        }
-//
-//        return entity;
-//    }
+
+    public ProductBacklogDTO convertToDTO(ProductBacklog backlog) {
+        return ProductBacklogDTO.builder()
+                .id(backlog.getId())
+                .nom(backlog.getNom())
+                .description(backlog.getDescription())
+                .epicIds(backlog.getEpics() != null ?
+                        backlog.getEpics().stream().map(Epic::getId).collect(Collectors.toList())
+                        : new ArrayList<Long>())
+                .userStoryIds( backlog.getUserStories() != null ?
+                        backlog.getUserStories().stream().map(UserStory::getId).collect(Collectors.toList())
+                        : new ArrayList<Long>())
+                .projectId(backlog.getProject() != null ? backlog.getProject().getId() : null)
+                .sprintBacklogIds(backlog.getSprintBacklogs() != null
+                        ? backlog.getSprintBacklogs().stream().map(SprintBacklog::getId).collect(Collectors.toList())
+                        : new ArrayList<Long>())
+
+                .build();
+    }
+
 
 }

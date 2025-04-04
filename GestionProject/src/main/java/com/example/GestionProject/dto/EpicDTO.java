@@ -8,11 +8,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class EpicDTO implements Serializable {
 
     @NotNull(message = "id may not be null")
@@ -27,6 +29,7 @@ public class EpicDTO implements Serializable {
     private Long productBacklogId;
 
     @NotNull(message = "List of userStory Ids may not be null")
-    private List<Long> userStoryIds;
+    @Builder.Default
+    private List<Long> userStoryIds = new ArrayList<>();
 
 }

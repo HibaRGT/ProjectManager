@@ -22,13 +22,11 @@ public class EpicService implements EpicInterface {
 
     private final EpicRepository epicRepository;
     private final ProductBacklogRepository productBacklogRepository;
-    private final UserStoryRepository userStoryRepository;
 
     @Autowired
-    public EpicService(EpicRepository epicRepository, ProductBacklogRepository productBacklogRepository, UserStoryRepository userStoryRepository) {
+    public EpicService(EpicRepository epicRepository, ProductBacklogRepository productBacklogRepository) {
         this.epicRepository = epicRepository;
         this.productBacklogRepository = productBacklogRepository;
-        this.userStoryRepository = userStoryRepository;
     }
 
     @Override
@@ -43,16 +41,19 @@ public class EpicService implements EpicInterface {
                 .orElseThrow(() -> new RuntimeException("Aucun ProductBacklog trouvé avec l'ID: " + epicDTO.getProductBacklogId()));
 
 
-        Epic epic = new Epic();
-        epic.setNom(epicDTO.getNom());
-        epic.setDescription(epicDTO.getDescription());
-        epic.setProductBacklog(productBacklog);
+        Epic epic = Epic.builder()
+                        .nom(epicDTO.getNom())
+                        .description(epicDTO.getDescription())
+                        .productBacklog(productBacklog).build();
 
         return convertToDTO(epicRepository.save(epic));
     }
 
     @Override
     public EpicDTO getEpicById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("L'ID de l'epic ne peut pas être null");
+        }
 
         Epic epic = epicRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Aucune Epic trouvée avec l'ID: " + id));
@@ -61,15 +62,23 @@ public class EpicService implements EpicInterface {
 
     @Override
     public List<EpicDTO> getEpicsByProductBacklogId(Long productBacklogId) {
+        if (productBacklogId == null) {
+            throw new IllegalArgumentException("L'ID du produit backlog ne peut pas être null");
+        }
         List<Epic> epics = epicRepository.findByProductBacklogId(productBacklogId);
+
         return epics.stream().map(epic -> convertToDTO(epic)).collect(Collectors.toList());
     }
 
 
     @Override
     public EpicDTO updateEpic(Long id, EpicDTO epicDTO) {
+        if (id == null) {
+            throw new IllegalArgumentException("L'ID de l'epic ne peut pas être null");
+        }
+
         Epic ep = epicRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException(("Aucune Epic trouvée avec l'ID: "+ id + " ")));
+                                .orElseThrow(() -> new RuntimeException(("Aucune Epic trouvée avec l'ID: "+ id)));
 
         validateEpic(epicDTO);
 
@@ -83,6 +92,10 @@ public class EpicService implements EpicInterface {
 
     @Override
     public void deleteEpic(Long id) {
+        if(id == null){
+            throw new IllegalArgumentException("L'ID de l'epic ne peut pas être null");
+        }
+
         if (!epicRepository.existsById(id)) {
             throw new RuntimeException("Epic non trouvée avec l'ID: " + id);
         }
@@ -99,15 +112,17 @@ public class EpicService implements EpicInterface {
     }
 
     public EpicDTO convertToDTO(Epic epic) {
-        return new EpicDTO(
-          epic.getId(),
-          epic.getNom(),
-          epic.getDescription(),
-          epic.getProductBacklog() != null ? epic.getProductBacklog().getId() : null,
-          epic.getUserStories() != null ?
-                  epic.getUserStories().stream().map(UserStory::getId).collect(Collectors.toList())
-                  : null
-        );
+        return EpicDTO.builder()
+                .id(epic.getId())
+                .nom(epic.getNom())
+                .description(epic.getDescription())
+                .productBacklogId(epic.getProductBacklog() != null
+                        ? epic.getProductBacklog().getId()
+                        : null)
+                .userStoryIds(epic.getUserStories() != null
+                        ? epic.getUserStories().stream().map(UserStory::getId).collect(Collectors.toList())
+                        : null)
+                .build();
     }
 
 

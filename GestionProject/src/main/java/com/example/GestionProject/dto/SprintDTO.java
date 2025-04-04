@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class SprintDTO implements Serializable {
 
     @NotNull(message = "id may not be null")
