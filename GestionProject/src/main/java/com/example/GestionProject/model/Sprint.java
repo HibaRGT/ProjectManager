@@ -27,4 +27,7 @@ public class Sprint {
     @OneToOne(mappedBy = "sprint", cascade = CascadeType.ALL)
     private SprintBacklog sprintBacklog;
 
+
+
+
 }
