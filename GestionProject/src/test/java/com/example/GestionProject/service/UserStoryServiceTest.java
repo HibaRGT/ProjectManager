@@ -35,6 +35,9 @@ class UserStoryServiceTest {
     @Mock
     private EpicRepository epicRepository;
 
+    @Mock
+    private TaskRepository taskRepository;
+
     @InjectMocks
     private UserStoryService userStoryService;
 
@@ -286,15 +289,21 @@ class UserStoryServiceTest {
     //----------------------
     @Test
     void testGetUserStoriesByTaskId() {
-        List<UserStory> userStories = List.of(userStory);
-        when(userStoryRepository.findByTaskId(1L)).thenReturn(userStories);
+        Long taskId = 1L;
 
-        List<UserStoryDTO> result = userStoryService.getUserStoriesByTaskId(1L);
+        Task task = Task.builder()
+                .id(taskId)
+                .userStory(userStory)
+                .build();
+
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+
+        List<UserStoryDTO> result = userStoryService.getUserStoriesByTaskId(taskId);
 
         assertAll(
-            () -> assertNotNull(result, "Result should not be null"),
-            () -> assertEquals(1, result.size()),
-            () -> assertEquals(userStoryDTO.getTitre(), result.get(0).getTitre())
+                () -> assertNotNull(result),
+                () -> assertEquals(1, result.size()),
+                () -> assertEquals(userStoryDTO.getTitre(), result.get(0).getTitre())
         );
     }
     //Exception test

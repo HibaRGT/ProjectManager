@@ -22,12 +22,14 @@ import java.util.stream.Collectors;
 @Service
 public class SprintService implements SprintInterface {
     private final SprintRepository sprintRepository;
+    private final SprintBacklogRepository sprintBacklogRepository;
 
 
     @Autowired
     public SprintService(SprintRepository sprintRepository
-    ) {
+    , SprintBacklogRepository sprintBacklogRepository) {
         this.sprintRepository = sprintRepository;
+        this.sprintBacklogRepository = sprintBacklogRepository;
     }
 
     @Override
@@ -72,10 +74,10 @@ public class SprintService implements SprintInterface {
     }
 
     public List<SprintDTO> getSprintsByProductBacklogId(Long productBacklogId) {
-        List<Sprint> sprints = sprintRepository.findByProductBacklogId(productBacklogId);
-
-        return sprints.stream()
-                .map(sprint -> convertToDTO(sprint))
+        List<SprintBacklog> sprintBacklogs = sprintBacklogRepository.findByProductBacklogId(productBacklogId);
+        return sprintBacklogs.stream()
+                .map(SprintBacklog::getSprint)
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
