@@ -6,10 +6,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
-class GestionProjetApplicationTest {
+class GestionProjectApplicationTests {
 
 	@Test
 	void contextLoads() {
-		assertTrue(true, "Le contexte s'est chargé sans erreur !");
 	}
+
 }
+

@@ -27,14 +27,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
 
                         // Routes réservées aux Product Owner
-                        .requestMatchers("/api/epics/**", "/api/product-backlogs/**")
+                        .requestMatchers("/api/epic/**", "/api/productBacklog/**", "/api/projects/**")
                         .hasRole("PRODUCT_OWNER")
 
                         // Routes accessibles au Scrum Master
-                        .requestMatchers("/api/sprints/**").hasRole("SCRUM_MASTER")
+                        .requestMatchers("/api/sprint/**", "/api/sprintBacklog/**").hasRole("SCRUM_MASTER")
 
                         // Routes accessibles aux développeurs
-                        .requestMatchers("/api/tasks/update", "/api/user-stories/update")
+                        .requestMatchers("/api/task/**", "/api/userStory/**")
                         .hasAnyRole("DEVELOPER", "SCRUM_MASTER")
 
                         // Toute autre route nécessite une auth

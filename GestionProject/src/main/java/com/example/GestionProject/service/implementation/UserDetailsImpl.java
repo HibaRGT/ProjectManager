@@ -1,6 +1,6 @@
 package com.example.GestionProject.service.implementation;
 
-import com.example.GestionProject.model.Role;
+import com.example.GestionProject.model.RoleName;
 import com.example.GestionProject.model.User;
 import com.example.GestionProject.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,6 @@ import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -33,7 +32,7 @@ public class UserDetailsImpl implements UserDetailsService {
         );
     }
 
-    private Collection<? extends GrantedAuthority> getAuthorities(Role role) {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.getName()));
+    private Collection<? extends GrantedAuthority> getAuthorities(RoleName role) {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 }
