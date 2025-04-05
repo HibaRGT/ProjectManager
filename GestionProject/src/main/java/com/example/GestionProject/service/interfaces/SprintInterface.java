@@ -10,5 +10,5 @@ public interface SprintInterface {
     public SprintDTO getSprintById(Long id);
     public SprintDTO updateSprint(Long id, SprintDTO sprint);
     public void deleteSprint(Long id);
-    public List<SprintDTO> getSprintsByProductBacklogId(Long productBacklogId);
+    public List<SprintDTO> getSprintsByProductBacklogId(Long productBacklog);
 }

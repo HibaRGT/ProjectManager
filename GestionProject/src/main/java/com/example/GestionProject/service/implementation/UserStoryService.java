@@ -19,20 +19,20 @@ public class UserStoryService implements UserStoryInterface {
     private final UserStoryRepository UserStoryRepository;
     private final ProductBacklogRepository productBacklogRepository;
     private final SprintBacklogRepository sprintBacklogRepository;
-    private final SprintRepository sprintRepository;
     private final EpicRepository epicRepository;
+    private final TaskRepository taskRepository;
 
     @Autowired
     public UserStoryService(UserStoryRepository userStoryRepository,
                             ProductBacklogRepository productBacklogRepository,
                             SprintBacklogRepository sprintBacklogRepository,
-                            SprintRepository sprintRepository,
-                            EpicRepository epicRepository) {
+                            EpicRepository epicRepository,
+                            TaskRepository taskRepository) {
         this.UserStoryRepository = userStoryRepository;
         this.productBacklogRepository = productBacklogRepository;
         this.sprintBacklogRepository = sprintBacklogRepository;
-        this.sprintRepository = sprintRepository;
         this.epicRepository = epicRepository;
+        this.taskRepository = taskRepository;
     }
 
     @Override
@@ -87,8 +87,12 @@ public class UserStoryService implements UserStoryInterface {
     @Override
     public List<UserStoryDTO> getUserStoriesByTaskId(Long taskId) {
         validateTaskId(taskId);
-        List<UserStory> userStories = UserStoryRepository.findByTaskId(taskId);
-        return userStories.stream().map(userStory -> convertToDTO(userStory)).collect(Collectors.toList());
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new EntityNotFoundException("Task not found with ID: " + taskId));
+
+        UserStory userStory = task.getUserStory();
+
+        return List.of(convertToDTO(userStory));
     }
 
 //    @Override

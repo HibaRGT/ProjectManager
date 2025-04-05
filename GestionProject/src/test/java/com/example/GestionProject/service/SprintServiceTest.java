@@ -32,6 +32,9 @@ public class SprintServiceTest {
     @Mock
     private SprintRepository sprintRepository;
 
+    @Mock
+    private SprintBacklogRepository sprintBacklogRepository;
+
     @InjectMocks
     private SprintService sprintService;
 
@@ -296,7 +299,7 @@ public class SprintServiceTest {
     }
 
     @Test
-    void testGetSprintByProductBacklogId() {
+    void testGetSprintsBySprintBacklogId() {
         Long backlogId = 1L;
 
         Sprint sprint1 = Sprint.builder()
@@ -315,16 +318,26 @@ public class SprintServiceTest {
                 .endDate(LocalDate.of(2025, 4, 30))
                 .build();
 
-        List<Sprint> sprints = Arrays.asList(sprint1, sprint2);
+        SprintBacklog sprintBacklog1 = SprintBacklog.builder()
+                .id(1L)
+                .sprint(sprint1)
+                .build();
 
-        when(sprintRepository.findByProductBacklogId(backlogId)).thenReturn(sprints);
+        SprintBacklog sprintBacklog2 = SprintBacklog.builder()
+                .id(2L)
+                .sprint(sprint2)
+                .build();
+
+        List<SprintBacklog> sprintBacklogs = Arrays.asList(sprintBacklog1, sprintBacklog2);
+
+        when(sprintBacklogRepository.findByProductBacklogId(backlogId)).thenReturn(sprintBacklogs);
 
         List<SprintDTO> result = sprintService.getSprintsByProductBacklogId(backlogId);
 
         assertEquals(2, result.size());
         assertEquals("Sprint 1", result.get(0).getName());
         assertEquals("Sprint 2", result.get(1).getName());
-        verify(sprintRepository, times(1)).findByProductBacklogId(backlogId);
+        verify(sprintBacklogRepository, times(1)).findByProductBacklogId(backlogId);
     }
 
 }
