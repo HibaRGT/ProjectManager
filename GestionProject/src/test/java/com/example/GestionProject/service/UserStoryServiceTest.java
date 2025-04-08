@@ -65,7 +65,7 @@ class UserStoryServiceTest {
                 .id(1L)
                 .titre("UserStory 1")
                 .description("UserStory Description 1")
-                .priorite(1)
+                .priorite(MoSCoWPriority.MUST_HAVE)
                 .statut(StatutEnum.TO_DO)
                 .productBacklog(backlog)
                 .epic(epic)
@@ -76,7 +76,7 @@ class UserStoryServiceTest {
                 .id(1L)
                 .titre("UserStory 1")
                 .description("UserStory Description 1")
-                .priorite(1)
+                .priorite(MoSCoWPriority.COULD_HAVE)
                 .statut(StatutEnum.TO_DO)
                 .epicId(1L)
                 .productBacklogId(1L)
@@ -323,7 +323,7 @@ class UserStoryServiceTest {
                 .id(1L)
                 .titre("US 1 Updated")
                 .description("Updated Description")
-                .priorite(2)
+                .priorite(MoSCoWPriority.SHOULD_HAVE)
                 .statut(StatutEnum.IN_PROGRESS)
                 .build();
 
@@ -331,7 +331,7 @@ class UserStoryServiceTest {
                 .id(1L)
                 .titre("US 1 Updated")
                 .description("Updated Description")
-                .priorite(2)
+                .priorite(MoSCoWPriority.MUST_HAVE)
                 .statut(StatutEnum.IN_PROGRESS)
                 .build();
 
@@ -382,10 +382,10 @@ class UserStoryServiceTest {
     @Test
     void testUpdateUserStoryPriority() {
         when(userStoryRepository.findById(1L)).thenReturn(Optional.of(userStory));
-        userStory.setPriorite(5);
+        userStory.setPriorite(MoSCoWPriority.COULD_HAVE);
         when(userStoryRepository.save(any(UserStory.class))).thenReturn(userStory);
 
-        UserStoryDTO updatedUserStory = userStoryService.updateUserStoryPriority(1L, 5);
+        UserStoryDTO updatedUserStory = userStoryService.updateUserStoryPriority(1L, MoSCoWPriority.WONT_HAVE);
 
         assertEquals(5, updatedUserStory.getPriorite());
     }
@@ -394,7 +394,7 @@ class UserStoryServiceTest {
     @Test
     void testUpdateUserStoryPriority_ShouldThrowException_WhenIdIsNull() {
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.updateUserStoryPriority(null, 6);
+            userStoryService.updateUserStoryPriority(null, MoSCoWPriority.SHOULD_HAVE);
         });
 
         assertEquals("L'ID du userStory ne peut pas être null", exception.getMessage());

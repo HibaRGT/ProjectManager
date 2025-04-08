@@ -1,6 +1,7 @@
 package com.example.GestionProject.service.interfaces;
 
 import com.example.GestionProject.dto.UserStoryDTO;
+import com.example.GestionProject.model.MoSCoWPriority;
 import com.example.GestionProject.model.StatutEnum;
 import com.example.GestionProject.model.UserStory;
 
@@ -16,7 +17,7 @@ public interface UserStoryInterface {
     public List<UserStoryDTO> getUserStoriesBySprintBacklogId(Long sprintBacklogId);
     public UserStoryDTO updateUserStory(Long id, UserStoryDTO userStoryDetails);
     public UserStoryDTO updateUserStoryStatus(Long id, StatutEnum newStatus);
-    public UserStoryDTO updateUserStoryPriority(Long id, int newPriority);
+    public UserStoryDTO updateUserStoryPriority(Long id, MoSCoWPriority newPriority);
     public UserStoryDTO removeUserStoryFromSprintBacklog(Long sprintBacklogId, Long userStoryId);
     public UserStoryDTO addUserStoryToSprintBacklogById(Long sprintBacklogId, Long userStoryId);
     //public UserStoryDTO addUserStoryToSprintBacklogBySprintId(Long sprintId, Long userStoryId);

@@ -47,12 +47,36 @@ public class UserStoryService implements UserStoryInterface {
         UserStory us = UserStory.builder()
                 .titre(userStoryDTO.getTitre())
                 .description(userStoryDTO.getDescription())
-                .priorite(userStoryDTO.getPriorite())
+                .valeurMetier(userStoryDTO.getValeurMetier())
+                .urgence(userStoryDTO.getUrgence())
+                .complexite(userStoryDTO.getComplexite())
+                .risques(userStoryDTO.getRisques())
+                .dependances(userStoryDTO.getDependances())
                 .statut(userStoryDTO.getStatut() != null ? userStoryDTO.getStatut() : StatutEnum.TO_DO)
                 .productBacklog(backlog)
                 .build();
 
+        int note = calculateNote(us);
+        us.setNotePriorite(note);
+        us.setPriorite(associatePriorite(note));
+
         return convertToDTO(UserStoryRepository.save(us));
+    }
+
+    private int calculateNote(UserStory s) {
+        return (s.getValeurMetier() * 3)
+                + (s.getUrgence() * 2)
+                - s.getComplexite()
+                - s.getRisques()
+                + s.getDependances();
+    }
+
+    // Définir la priorité MoSCoW en fonction de la note
+    private MoSCoWPriority associatePriorite(int note) {
+        if (note >= 18) return MoSCoWPriority.MUST_HAVE;
+        else if (note >= 13) return MoSCoWPriority.SHOULD_HAVE;
+        else if (note >= 8) return MoSCoWPriority.COULD_HAVE;
+        else return MoSCoWPriority.WONT_HAVE;
     }
 
     @Override
@@ -205,13 +229,18 @@ public class UserStoryService implements UserStoryInterface {
 
         us.setTitre(userStoryDetails.getTitre());
         us.setDescription(userStoryDetails.getDescription());
+        us.setValeurMetier(userStoryDetails.getValeurMetier());
+        us.setUrgence(userStoryDetails.getUrgence());
+        us.setComplexite(userStoryDetails.getComplexite());
+        us.setRisques(userStoryDetails.getRisques());
+        us.setDependances(userStoryDetails.getDependances());
 
-        if(userStoryDetails.getPriorite() != 0 && userStoryDetails.getPriorite() != us.getPriorite()) {
-            updateUserStoryPriority(id, us.getPriorite());
-        }
+        int note = calculateNote(us);
+        MoSCoWPriority nouvellePriorite = associatePriorite(note);
+        us.setPriorite(nouvellePriorite);
 
         if(userStoryDetails.getStatut() != null && userStoryDetails.getStatut() != us.getStatut()){
-            updateUserStoryStatus(id, us.getStatut());
+            updateUserStoryStatus(id, userStoryDetails.getStatut());
         }
 
         return convertToDTO(UserStoryRepository.save(us));
@@ -230,7 +259,7 @@ public class UserStoryService implements UserStoryInterface {
     }
 
     @Override
-    public UserStoryDTO updateUserStoryPriority(Long id, int newPriority) {
+    public UserStoryDTO updateUserStoryPriority(Long id, MoSCoWPriority newPriority) {
         validateUserStoryId(id);
         UserStory us = UserStoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("UserStory introuvable avec l'ID: " + id));
@@ -294,13 +323,18 @@ public class UserStoryService implements UserStoryInterface {
         }
     }
 
+
     /////////////////////////////////////////
     public UserStoryDTO convertToDTO(UserStory userStory) {
         return UserStoryDTO.builder()
                 .id(userStory.getId())
                 .titre(userStory.getTitre())
                 .description(userStory.getDescription())
-                .priorite(userStory.getPriorite())
+                .valeurMetier(userStory.getValeurMetier())
+                .risques(userStory.getRisques())
+                .urgence(userStory.getUrgence())
+                .dependances(userStory.getDependances())
+                .complexite(userStory.getComplexite())
                 .statut(userStory.getStatut())
                 .epicId(userStory.getEpic() != null ? userStory.getEpic().getId() : null)
                 .productBacklogId(userStory.getProductBacklog() != null ? userStory.getProductBacklog().getId() : null)

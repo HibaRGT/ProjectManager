@@ -40,7 +40,7 @@ public class SecurityConfig {
 
                         // Routes accessibles aux développeurs
                         .requestMatchers("/api/task/**", "/api/userStory/**")
-                        .hasAnyRole("DEVELOPER", "SCRUM_MASTER")
+                        .hasAnyRole("DEVELOPPEUR", "SCRUM_MASTER")
 
                         // Toute autre route nécessite une auth
                         .anyRequest().authenticated()

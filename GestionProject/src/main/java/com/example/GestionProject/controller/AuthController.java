@@ -16,7 +16,9 @@ public class AuthController {
 
     @PostMapping("/register")
     public AuthResponse register(@RequestBody RegisterRequest request) {
-        return authService.register(request);
+        AuthResponse authResponse = authService.register(request);
+        System.out.println("Generated JWT: " + authResponse.getToken());
+        return authResponse;
     }
 
     @PostMapping("/login")

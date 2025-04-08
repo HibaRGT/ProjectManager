@@ -64,11 +64,15 @@ public class UserStoryController {
         return new ResponseEntity<>(userStoryDTO1,HttpStatus.OK);
     }*/
 
-    @PostMapping("/{sprintBacklog}/sprintBacklog/{userStoryId}")
-    public ResponseEntity<UserStoryDTO> addUserStoryToSprintBacklogById(@RequestBody Long userStoryId, @PathVariable Long backlogId ) {
-        UserStoryDTO userStoryDTO1=userStoryService.addUserStoryToSprintBacklogById(backlogId,userStoryId);
-        return new ResponseEntity<>(userStoryDTO1,HttpStatus.OK);
+    @PostMapping("/{sprintBacklogId}/{userStoryId}")
+    public ResponseEntity<UserStoryDTO> addUserStoryToSprintBacklogById(
+            @PathVariable Long sprintBacklogId,
+            @PathVariable Long userStoryId) {
+
+        UserStoryDTO userStoryDTO = userStoryService.addUserStoryToSprintBacklogById(sprintBacklogId, userStoryId);
+        return ResponseEntity.ok(userStoryDTO);
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<UserStoryDTO> updateUserStory(@PathVariable Long id, @RequestBody UserStoryDTO userStoryDetails) {

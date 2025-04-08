@@ -25,8 +25,26 @@ public class UserStory {
     @Column(name = "description", length = 255)
     private String description;
 
+    @Column(name = "valeurMetier")
+    private int valeurMetier;
+
+    @Column(name = "urgence")
+    private int urgence;
+
+    @Column(name = "complexite")
+    private int complexite;
+
+    @Column(name = "risques")
+    private int risques;
+
+    @Column(name = "dependances")
+    private int dependances;
+
+    private int notePriorite;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "priorite", nullable = false)
-    private int priorite;
+    private MoSCoWPriority priorite;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "statut", nullable = false)

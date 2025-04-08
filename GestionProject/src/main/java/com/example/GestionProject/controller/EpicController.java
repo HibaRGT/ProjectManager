@@ -47,7 +47,7 @@ public class EpicController {
     }
 
 
-    @DeleteMapping("/id")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEpicById(@PathVariable Long id) {
         epicService.deleteEpic(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

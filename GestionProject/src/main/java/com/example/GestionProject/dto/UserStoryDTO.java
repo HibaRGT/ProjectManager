@@ -25,7 +25,11 @@ public class UserStoryDTO implements Serializable {
     @NotBlank(message = "description may not be blank")
     private String description;
 
-    private int priorite;
+    private int valeurMetier;
+    private int urgence;
+    private int complexite;
+    private int risques;
+    private int dependances;
 
     @NotNull
     private StatutEnum statut;
