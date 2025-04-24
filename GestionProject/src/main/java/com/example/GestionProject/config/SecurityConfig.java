@@ -31,6 +31,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
 
+                        .requestMatchers("/api/users/**").permitAll()
                         // Routes réservées aux Product Owner
                         .requestMatchers("/api/epic/**", "/api/productBacklog/**", "/api/projects/**")
                         .hasRole("PRODUCT_OWNER")

@@ -25,4 +25,10 @@ public class AuthController {
     public AuthResponse login(@RequestBody AuthRequest request) {
         return authService.authenticate(request);
     }
+
+    @PostMapping("/logout")
+    public String logout() {
+        return "User logged out successfully. Please remove token from client storage.";
+    }
+
 }

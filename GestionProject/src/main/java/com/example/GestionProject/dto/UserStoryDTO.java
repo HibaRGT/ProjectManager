@@ -40,6 +40,8 @@ public class UserStoryDTO implements Serializable {
 
     private Long sprintBacklogId;
 
+    private MoSCoWPriority priorite;
+
     @NotNull(message = "The list of taskIds may not be null")
     @Builder.Default
     private List<Long> taskIds = new ArrayList<>();
