@@ -3,7 +3,6 @@
 This is a **RESTful API** for managing projects following the **Agile methodology**.  
 It allows teams to create and manage **Product Backlogs, User Stories, Epics, and Sprints**.  
 
-The API handles authentication, and secure access using **JWT**.
 
 ---
 
