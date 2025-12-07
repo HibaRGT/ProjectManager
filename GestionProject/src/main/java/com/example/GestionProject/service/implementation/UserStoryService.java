@@ -336,6 +336,7 @@ public class UserStoryService implements UserStoryInterface {
                 .dependances(userStory.getDependances())
                 .complexite(userStory.getComplexite())
                 .statut(userStory.getStatut())
+                .priorite(userStory.getPriorite())
                 .epicId(userStory.getEpic() != null ? userStory.getEpic().getId() : null)
                 .productBacklogId(userStory.getProductBacklog() != null ? userStory.getProductBacklog().getId() : null)
                 .sprintBacklogId(userStory.getSprintBacklog() != null ? userStory.getSprintBacklog().getId() : null)
