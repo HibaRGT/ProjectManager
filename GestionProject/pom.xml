@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>GestionProject</artifactId>
+	<artifactId>gestionprojet</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>GestionProject</name>
 	<description>API pour une application de gestion des projets agiles</description>
