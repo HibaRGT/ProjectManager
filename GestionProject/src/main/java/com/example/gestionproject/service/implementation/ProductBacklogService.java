@@ -1,149 +1,114 @@
 package com.example.gestionproject.service.implementation;
 
 import com.example.gestionproject.dto.ProductBacklogDTO;
-import com.example.gestionproject.exception.ProductBacklogNotAssociatedWithProjectException;
 import com.example.gestionproject.exception.ProductBacklogNotFound;
 import com.example.gestionproject.exception.ProjectNotFoundException;
+import com.example.gestionproject.mapper.ProductBacklogMapper;
 import com.example.gestionproject.model.*;
 import com.example.gestionproject.repository.ProductBacklogRepository;
 import com.example.gestionproject.repository.ProjectRepository;
 import com.example.gestionproject.service.interfaces.ProductBacklogInterface;
+import com.example.gestionproject.validator.ProductBacklogValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductBacklogService implements ProductBacklogInterface {
     private final ProductBacklogRepository productBacklogRepository;
     private final ProjectRepository projectRepository;
+    private final ProductBacklogValidator validator;
     private static final String NOT_FOUND_PROJECT = "Projet non trouvé avec l'ID: ";
 
     @Autowired
-    public ProductBacklogService(ProductBacklogRepository productBacklogRepository, ProjectRepository projectRepository) {
+    public ProductBacklogService(ProductBacklogRepository productBacklogRepository, ProjectRepository projectRepository, ProductBacklogValidator validator) {
         this.productBacklogRepository = productBacklogRepository;
         this.projectRepository = projectRepository;
+        this.validator = validator;
     }
 
     @Override
     public ProductBacklogDTO createProductBacklog(ProductBacklogDTO backlog) {
-        validateProductBacklog(backlog);
+        validator.validateProductBacklog(backlog);
 
         ProductBacklog pb = ProductBacklog.builder()
                 .nom(backlog.getNom())
                 .description(backlog.getDescription())
                 .build();
 
-        if (backlog.getProjectId() != null) {
-            Project project = projectRepository.findById(backlog.getProjectId())
-                    .orElseThrow(() -> new RuntimeException(NOT_FOUND_PROJECT + backlog.getProjectId()));
-            pb.setProject(project);
-            project.setProductBacklog(pb);
-        }else{
-            throw new ProductBacklogNotAssociatedWithProjectException("ProductBacklog doit etre associé a un projet");
-        }
+        validator.validateProjectAssociation(backlog.getProjectId());
+        Project project = getProjectOrThrow(backlog.getProjectId());
+        pb.setProject(project);
+        project.setProductBacklog(pb);
 
-        ProductBacklog res = productBacklogRepository.save(pb);
-        return convertToDTO(res);
+        return ProductBacklogMapper.toDTO(productBacklogRepository.save(pb));
     }
 
     @Override
     public ProductBacklogDTO getProductBacklogById(Long id) {
-        validateProductBacklogId(id);
+        validator.validateProductBacklogId(id);
 
-        ProductBacklog backlog = productBacklogRepository.findById(id)
-                .orElseThrow(() -> new ProductBacklogNotFound("ProductBacklog non trouvé avec l'ID: " + id));
-        return convertToDTO(backlog);
+        return ProductBacklogMapper.toDTO(
+                getBacklogOrThrow(id)
+        );
     }
 
     @Override
     public ProductBacklogDTO getProductBacklogByProjectId(Long id) {
-        if(id == null){
-            throw new IllegalArgumentException("L'ID du projet ne peut pas être null");
-        }
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new ProjectNotFoundException(NOT_FOUND_PROJECT + id));
+        validator.validateProjectId(id);
+        Project project = getProjectOrThrow(id);
         ProductBacklog pb = project.getProductBacklog();
-        return convertToDTO(pb);
+        return ProductBacklogMapper.toDTO(pb);
     }
 
     @Override
     public List<ProductBacklogDTO> getAllProductBacklogs() {
-        List<ProductBacklog> backlogs = productBacklogRepository.findAll();
-        return backlogs.stream()
-                .map(this::convertToDTO)
+        return productBacklogRepository.findAll()
+                .stream()
+                .map(ProductBacklogMapper::toDTO)
                 .toList();
     }
 
     @Override
     public void deleteProductBacklog(Long id) {
-        validateProductBacklogId(id);
-
-        if (!productBacklogRepository.existsById(id)) {
-            throw new ProductBacklogNotFound("ProductBacklog non trouvée avec l'ID: " + id);
-        }
-        productBacklogRepository.deleteById(id);
+        validator.validateProductBacklogId(id);
+        productBacklogRepository.delete(
+                getBacklogOrThrow(id)
+        );
     }
 
     @Override
     public ProductBacklogDTO updateProductBacklog(Long id, ProductBacklogDTO backlogDTO) {
-        validateProductBacklogId(id);
+        validator.validateProductBacklogId(id);
+        validator.validateProductBacklog(backlogDTO);
 
-        ProductBacklog existingBacklog = productBacklogRepository.findById(id)
-                .orElseThrow(() -> new ProductBacklogNotFound("ProductBacklog non trouvé avec l'ID: " + id));
-
-        validateProductBacklog(backlogDTO);
+        ProductBacklog existingBacklog = getBacklogOrThrow(id);
 
         existingBacklog.setNom(backlogDTO.getNom());
         existingBacklog.setDescription(backlogDTO.getDescription());
 
         if (backlogDTO.getProjectId() != null) {
-            Project project = projectRepository.findById(backlogDTO.getProjectId())
-                    .orElseThrow(() -> new ProjectNotFoundException(NOT_FOUND_PROJECT + backlogDTO.getProjectId()));
-            existingBacklog.setProject(project);
+            existingBacklog.setProject(
+                    getProjectOrThrow(backlogDTO.getProjectId())
+            );
         }
 
-        ProductBacklog updatedBacklog = productBacklogRepository.save(existingBacklog);
-        return convertToDTO(updatedBacklog);
+        return ProductBacklogMapper.toDTO(
+                productBacklogRepository.save(existingBacklog)
+        );
     }
 
-    //------------------------------------------------------------------------------------------------------------------
+    /* ===== Private helpers ===== */
 
-    private void validateProductBacklog(ProductBacklogDTO backlog) {
-        if (backlog.getNom() == null || backlog.getNom().isEmpty()) {
-            throw new IllegalArgumentException("Le nom du backlog ne peut pas être vide");
-        }
-        if (backlog.getDescription() == null || backlog.getDescription().isEmpty()) {
-            throw new IllegalArgumentException("La description du backlog ne peut pas être vide");
-        }
+    private ProductBacklog getBacklogOrThrow(Long id) {
+        return productBacklogRepository.findById(id)
+                .orElseThrow(() ->
+                        new ProductBacklogNotFound("ProductBacklog non trouvé avec l'ID: " + id));
     }
 
-    private void validateProductBacklogId(Long id){
-        if(id == null){
-            throw new IllegalArgumentException("L'ID du produit backlog ne peut pas être null");
-        }
+    private Project getProjectOrThrow(Long projectId) {
+        return projectRepository.findById(projectId)
+                .orElseThrow(() ->
+                        new ProjectNotFoundException(NOT_FOUND_PROJECT + projectId));
     }
-
-
-    public ProductBacklogDTO convertToDTO(ProductBacklog backlog) {
-        return ProductBacklogDTO.builder()
-                .id(backlog.getId())
-                .nom(backlog.getNom())
-                .description(backlog.getDescription())
-                .epicIds(backlog.getEpics() != null ?
-                        backlog.getEpics().stream().map(Epic::getId).collect(Collectors.toCollection(ArrayList::new))
-                        : new ArrayList<>())
-                .userStoryIds( backlog.getUserStories() != null ?
-                        backlog.getUserStories().stream().map(UserStory::getId).collect(Collectors.toCollection(ArrayList::new))
-                        : new ArrayList<>())
-                .projectId(backlog.getProject() != null ? backlog.getProject().getId() : null)
-                .sprintBacklogIds(backlog.getSprintBacklogs() != null
-                        ? backlog.getSprintBacklogs().stream().map(SprintBacklog::getId).collect(Collectors.toCollection(ArrayList::new))
-                        : new ArrayList<>())
-                .build();
-    }
-
-
 }

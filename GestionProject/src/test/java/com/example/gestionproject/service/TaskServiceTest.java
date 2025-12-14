@@ -8,10 +8,10 @@ import com.example.gestionproject.model.UserStory;
 import com.example.gestionproject.repository.TaskRepository;
 import com.example.gestionproject.repository.UserStoryRepository;
 import com.example.gestionproject.service.implementation.TaskService;
+import com.example.gestionproject.validator.TaskValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,7 +32,8 @@ class TaskServiceTest {
     @Mock
     private UserStoryRepository userStoryRepository;
 
-    @InjectMocks
+    private final TaskValidator taskValidator = new TaskValidator();
+
     private TaskService taskService;
 
     private Task task;
@@ -41,6 +42,7 @@ class TaskServiceTest {
 
     @BeforeEach
     void setUp() {
+        taskService = new TaskService(taskRepository, userStoryRepository, taskValidator);
         userStory = UserStory.builder()
                 .id(1L)
                 .titre("US 1")

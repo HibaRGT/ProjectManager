@@ -2,9 +2,11 @@ package com.example.gestionproject.service.implementation;
 
 import com.example.gestionproject.dto.ProjectDTO;
 import com.example.gestionproject.exception.ProjectNotFoundException;
+import com.example.gestionproject.mapper.ProjectMapper;
 import com.example.gestionproject.model.Project;
 import com.example.gestionproject.repository.ProjectRepository;
 import com.example.gestionproject.service.interfaces.ProjectInterface;
+import com.example.gestionproject.validator.ProjectValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,16 +16,18 @@ import java.util.List;
 public class ProjectService implements ProjectInterface {
 
     private final ProjectRepository projectRepository;
+    private final ProjectValidator projectValidator;
 
     @Autowired
-    public ProjectService(ProjectRepository pr){
+    public ProjectService(ProjectRepository pr, ProjectValidator projectValidator){
         this.projectRepository = pr;
+        this.projectValidator = projectValidator;
     }
 
     @Override
     @Transactional
     public ProjectDTO createProject(ProjectDTO projectDTO) {
-        validateProject(projectDTO);
+        projectValidator.validateProject(projectDTO);
 
         Project project = Project.builder()
                 .nom(projectDTO.getNom())
@@ -32,78 +36,51 @@ public class ProjectService implements ProjectInterface {
 
 
         Project savedProject = projectRepository.save(project);
-        return convertToDTO(savedProject);
+        return ProjectMapper.toDTO(savedProject);
     }
 
     @Override
     public List<ProjectDTO> getAllProject() {
         List<Project> projects = projectRepository.findAll();
         return projects.stream()
-                .map(this::convertToDTO)
+                .map(ProjectMapper::toDTO)
                 .toList();
     }
 
     @Override
     public ProjectDTO getProjectById(Long id) {
-        validateProjectId(id);
+        projectValidator.validateProjectId(id);
 
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new ProjectNotFoundException("Aucun projet trouvé avec l'ID: " + id));
-
-        return convertToDTO(project);
+        Project project = getProjectOrThrow(id);
+        return ProjectMapper.toDTO(project);
     }
 
     @Override
     public void deleteProject(Long id) {
-        validateProjectId(id);
-        if (!projectRepository.existsById(id)) {
-            throw new ProjectNotFoundException("Project non trouvé avec l'ID: " + id);
-        }
-        projectRepository.deleteById(id);
+        projectValidator.validateProjectId(id);
+        Project project = getProjectOrThrow(id);
+        projectRepository.delete(project);
     }
 
     @Override
     public ProjectDTO updateProject(Long id, ProjectDTO projectDTO) {
-        validateProjectId(id);
-        Project pr = projectRepository.findById(id)
-                .orElseThrow(() -> new ProjectNotFoundException("Project non trouvé avec l'ID: " + id));
+        projectValidator.validateProjectId(id);
 
-        validateProject(projectDTO);
+        Project pr = getProjectOrThrow(id);
+        projectValidator.validateProject(projectDTO);
 
         pr.setNom(projectDTO.getNom());
         pr.setDescription(projectDTO.getDescription());
 
         Project updatedProject = projectRepository.save(pr);
-        return convertToDTO(updatedProject);
+        return ProjectMapper.toDTO(updatedProject);
+    }
+
+    private Project getProjectOrThrow(Long id) {
+        projectValidator.validateProjectId(id);
+        return projectRepository.findById(id)
+                .orElseThrow(() -> new ProjectNotFoundException("Project non trouvé avec l'ID: " + id));
     }
 
 
-    private void validateProject(ProjectDTO projectDTO) {
-        if (projectDTO.getNom() == null || projectDTO.getNom().isEmpty()) {
-            throw new IllegalArgumentException("Le titre du projet ne peut pas être vide");
-        }
-        if (projectDTO.getDescription() == null || projectDTO.getDescription().isEmpty()) {
-            throw new IllegalArgumentException("La description du projet ne peut pas être vide");
-        }
-    }
-
-    private void validateProjectId(Long id){
-        if(id == null){
-            throw new IllegalArgumentException("L'ID du projet ne peut pas être null");
-        }
-    }
-
-    private ProjectDTO convertToDTO(Project project) {
-        ProjectDTO dto = ProjectDTO.builder()
-                .id(project.getId())
-                .nom(project.getNom())
-                .description(project.getDescription())
-                .build();
-
-        if (project.getProductBacklog() != null) {
-            dto.setProductBacklogId(project.getProductBacklog().getId());
-        }
-
-        return dto;
-    }
 }

@@ -6,12 +6,12 @@ import com.example.gestionproject.model.Project;
 import com.example.gestionproject.repository.ProductBacklogRepository;
 import com.example.gestionproject.repository.ProjectRepository;
 import com.example.gestionproject.service.implementation.ProductBacklogService;
+import com.example.gestionproject.validator.ProductBacklogValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -31,7 +31,8 @@ class ProductBacklogServiceTest {
     @Mock
     private ProjectRepository projectRepository;
 
-    @InjectMocks
+    private final ProductBacklogValidator validator = new ProductBacklogValidator();
+
     private ProductBacklogService productBacklogService;
 
     private ProductBacklog backlog;
@@ -40,6 +41,7 @@ class ProductBacklogServiceTest {
 
     @BeforeEach
     void setUp() {
+        productBacklogService = new ProductBacklogService(productBacklogRepository, projectRepository, validator);
         project = Project.builder().id(1L).build();
 
         backlog = ProductBacklog.builder()
@@ -170,12 +172,11 @@ class ProductBacklogServiceTest {
     //---------------
     @Test
     void testDeleteProductBacklog() {
-        when(productBacklogRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(productBacklogRepository).deleteById(1L);
+        when(productBacklogRepository.findById(1L))
+                .thenReturn(Optional.of(backlog));
 
         assertDoesNotThrow(() -> productBacklogService.deleteProductBacklog(1L));
-
-        verify(productBacklogRepository, times(1)).deleteById(1L);
+        verify(productBacklogRepository).delete(backlog);
     }
 
     //Exception testing for deleting product backlogs
@@ -190,10 +191,10 @@ class ProductBacklogServiceTest {
 
     @Test
     void testDeleteProductBacklog_ShouldThrowException_WhenBacklogNotFound() {
-        when(productBacklogRepository.existsById(2L)).thenReturn(false);
-
+        when(productBacklogRepository.findById(2L))
+                .thenReturn(Optional.empty());
         Exception exception = assertThrows(RuntimeException.class, () -> productBacklogService.deleteProductBacklog(2L));
-        assertEquals("ProductBacklog non trouvée avec l'ID: 2", exception.getMessage());
+        assertEquals("ProductBacklog non trouvé avec l'ID: 2", exception.getMessage());
     }
 
     //---------------
@@ -248,8 +249,6 @@ class ProductBacklogServiceTest {
     })
     void testUpdateProductBacklog_InvalidDTO_ShouldThrowIllegalArgumentException(
             String nom, String description, String expectedMessage) {
-
-        when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(backlog));
 
         if ("null".equals(nom)) nom = null;
         if ("null".equals(description)) description = null;

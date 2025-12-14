@@ -3,80 +3,78 @@ package com.example.gestionproject.service.implementation;
 import com.example.gestionproject.dto.TaskDTO;
 import com.example.gestionproject.exception.TaskNotFoundException;
 import com.example.gestionproject.exception.UserStoryNotFoundException;
+import com.example.gestionproject.mapper.TaskMapper;
 import com.example.gestionproject.model.Task;
 import com.example.gestionproject.model.TaskStatus;
 import com.example.gestionproject.model.UserStory;
 import com.example.gestionproject.repository.TaskRepository;
 import com.example.gestionproject.repository.UserStoryRepository;
 import com.example.gestionproject.service.interfaces.TaskInterface;
+import com.example.gestionproject.validator.TaskValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TaskService implements TaskInterface {
     private final TaskRepository taskRepository;
     private final UserStoryRepository userStoryRepository;
+    private final TaskValidator taskValidator;
     private static final String NOT_FOUND_TASK = "Tâche non trouvée avec l'ID: ";
 
     @Autowired
-    public TaskService(TaskRepository taskRepository, UserStoryRepository userStoryRepository) {
+    public TaskService(TaskRepository taskRepository, UserStoryRepository userStoryRepository, TaskValidator taskValidator) {
         this.taskRepository = taskRepository;
         this.userStoryRepository = userStoryRepository;
+        this.taskValidator = taskValidator;
     }
 
     @Override
     public TaskDTO createTaskForUserStory(Long userStoryId, TaskDTO taskDTO) {
-        validateUserStoryId(userStoryId);
+        taskValidator.validateUserStoryId(userStoryId);
         UserStory userStory = userStoryRepository.findById(userStoryId)
                 .orElseThrow(() -> new UserStoryNotFoundException("UserStory introuvable!"));
 
-        if (userStory.getSprintBacklog() == null){
-            throw new IllegalStateException("Impossible d'ajouter des tâches à une User Story qui n'est pas dans un Sprint");
-        }
+        taskValidator.validateUserStoryAssignedToSprint(userStory);
 
-        validateTaskData(taskDTO);
+        taskValidator.validateTaskData(taskDTO);
 
-        Task task = Task.builder()
-                .title(taskDTO.getTitle())
-                .description(taskDTO.getDescription())
-                .status(taskDTO.getStatus() != null ? taskDTO.getStatus() : TaskStatus.TO_DO)
-                .userStory(userStory)
-                .build();
+        Task task = TaskMapper.toEntity(taskDTO, userStory);
 
         Task savedTask = taskRepository.save(task);
-        return convertToDTO(savedTask);
+        return TaskMapper.toDTO(savedTask);
     }
 
     @Override
     public TaskDTO getTaskById(Long taskId) {
-        validateTaskId(taskId);
+        taskValidator.validateTaskId(taskId);
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException(NOT_FOUND_TASK + taskId));
-        return convertToDTO(task);
+        return TaskMapper.toDTO(task);
     }
 
     @Override
     public List<TaskDTO> getTasksByUserStoryId(Long userStoryId) {
-        validateUserStoryId(userStoryId);
+        taskValidator.validateUserStoryId(userStoryId);
 
         UserStory userStory = userStoryRepository.findById(userStoryId)
                 .orElseThrow(() -> new UserStoryNotFoundException("User Story non trouvée avec l'ID: " + userStoryId));
 
         List<Task> tasks = userStory.getTasks();
-        return tasks.stream().map(this::convertToDTO).toList();
+        return tasks.stream().map(TaskMapper::toDTO).toList();
     }
 
     @Override
     public TaskDTO updateTask(Long taskId, TaskDTO updatedTaskDTO) {
-        validateTaskId(taskId);
+        taskValidator.validateTaskId(taskId);
 
         Task existingTask = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException(NOT_FOUND_TASK + taskId));
 
-        validateTaskData(updatedTaskDTO);
+        taskValidator.validateTaskData(updatedTaskDTO);
 
         existingTask.setTitle(updatedTaskDTO.getTitle());
         existingTask.setDescription(updatedTaskDTO.getDescription());
@@ -87,70 +85,31 @@ public class TaskService implements TaskInterface {
 
         Task task = taskRepository.save(existingTask);
 
-        return convertToDTO(task);
+        return TaskMapper.toDTO(task);
     }
 
     public TaskDTO updateTaskStatus(Long taskId, TaskStatus status) {
-        validateTaskId(taskId);
+        taskValidator.validateTaskId(taskId);
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Tache introuvable!"));
 
         task.setStatus(status);
 
-        return convertToDTO(taskRepository.save(task));
+        return TaskMapper.toDTO(taskRepository.save(task));
     }
 
     @Override
     public void deleteTask(Long taskId) {
-        validateTaskId(taskId);
+        taskValidator.validateTaskId(taskId);
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException(NOT_FOUND_TASK + taskId));
 
-        UserStory userStory = task.getUserStory();
-        if (userStory != null) {
-            userStory.getTasks().remove(task);
-            userStoryRepository.save(userStory);
-        }
+        Optional.ofNullable(task.getUserStory())
+                .ifPresent(userStory -> {
+                    userStory.getTasks().remove(task);
+                    userStoryRepository.save(userStory);
+                });
 
         taskRepository.deleteById(taskId);
-    }
-
-
-    //validation
-    private void validateTaskData(TaskDTO taskDTO) {
-        if (taskDTO.getTitle() == null || taskDTO.getTitle().isEmpty()) {
-            throw new IllegalArgumentException("Le titre de la tâche ne peut pas être vide");
-        }
-
-        if (taskDTO.getDescription() == null || taskDTO.getDescription().isEmpty()) {
-            throw new IllegalArgumentException("La description de la tâche ne peut pas être vide");
-        }
-
-        if (taskDTO.getStatus() == null) {
-            throw new IllegalArgumentException("Le status de la tâche ne peut pas être vide");
-        }
-    }
-
-    private void validateTaskId(Long id){
-        if(id == null){
-            throw new IllegalArgumentException("L'ID du task ne peut pas etre null");
-        }
-    }
-
-    private void validateUserStoryId(Long id){
-        if(id == null){
-            throw new IllegalArgumentException("L'ID du userStory ne peut pas etre null");
-        }
-    }
-
-
-    public TaskDTO convertToDTO(Task task) {
-        return TaskDTO.builder()
-                .id(task.getId())
-                .title(task.getTitle())
-                .description(task.getDescription())
-                .status(task.getStatus())
-                .userStoryId( task.getUserStory() != null ? task.getUserStory().getId() : null)
-                .build();
     }
 }

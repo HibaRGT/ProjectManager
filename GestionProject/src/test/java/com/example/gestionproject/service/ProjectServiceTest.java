@@ -4,12 +4,12 @@ import com.example.gestionproject.dto.ProjectDTO;
 import com.example.gestionproject.model.Project;
 import com.example.gestionproject.repository.ProjectRepository;
 import com.example.gestionproject.service.implementation.ProjectService;
+import com.example.gestionproject.validator.ProjectValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,7 +26,7 @@ class ProjectServiceTest {
     @Mock
     private ProjectRepository projectRepository;
 
-    @InjectMocks
+    private final ProjectValidator projectValidator = new ProjectValidator();
     private ProjectService projectService;
 
     private Project project;
@@ -34,6 +34,7 @@ class ProjectServiceTest {
 
     @BeforeEach
     void setUp() {
+        projectService = new ProjectService(projectRepository, projectValidator);
         project = Project.builder()
                 .id(1L)
                 .nom("Project 1")
@@ -98,17 +99,17 @@ class ProjectServiceTest {
             projectService.getProjectById(2L)
         );
 
-        assertEquals("Aucun projet trouvé avec l'ID: 2", exception.getMessage());
+        assertEquals("Project non trouvé avec l'ID: 2", exception.getMessage());
     }
 
     @Test
     void testDeleteProject(){
-        when(projectRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(projectRepository).deleteById(1L);
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+        doNothing().when(projectRepository).delete(project);
 
         assertDoesNotThrow(() -> projectService.deleteProject(1L));
 
-        verify(projectRepository, times(1)).deleteById(1L);
+        verify(projectRepository, times(1)).delete(project);
     }
 
     //Exception testing for deleting project
@@ -123,7 +124,7 @@ class ProjectServiceTest {
 
     @Test
     void testDeleteProject_ShouldThrowException_WhenNotFoundNull() {
-        when(projectRepository.existsById(2L)).thenReturn(false);
+        when(projectRepository.findById(2L)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(RuntimeException.class, () ->
             projectService.deleteProject(2L)

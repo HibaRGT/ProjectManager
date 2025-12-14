@@ -8,10 +8,10 @@ import com.example.gestionproject.repository.ProductBacklogRepository;
 import com.example.gestionproject.repository.SprintBacklogRepository;
 import com.example.gestionproject.repository.SprintRepository;
 import com.example.gestionproject.service.implementation.SprintBacklogService;
+import com.example.gestionproject.validator.SprintBacklogValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -33,7 +33,8 @@ class SprintBacklogTest {
     @Mock
     private ProductBacklogRepository productBacklogRepository;
 
-    @InjectMocks
+    private final SprintBacklogValidator validator = new SprintBacklogValidator();
+
     private SprintBacklogService sprintBacklogService;
 
     private SprintBacklog sprintBacklog;
@@ -43,6 +44,8 @@ class SprintBacklogTest {
 
     @BeforeEach
     void setUp() {
+        sprintBacklogService = new SprintBacklogService(sprintBacklogRepository, sprintRepository, productBacklogRepository, validator);
+
         sprint = Sprint.builder()
                 .id(1L)
                 .name("Test Sprint")
