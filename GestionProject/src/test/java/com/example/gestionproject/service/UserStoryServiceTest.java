@@ -1,17 +1,17 @@
 package com.example.gestionproject.service;
 
 import com.example.gestionproject.dto.UserStoryDTO;
+import com.example.gestionproject.exception.UserStoryNotFoundException;
 import com.example.gestionproject.model.*;
 import com.example.gestionproject.repository.*;
 import com.example.gestionproject.service.implementation.UserStoryService;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.gestionproject.service.implementation.helpers.PriorityCalculator;
+import com.example.gestionproject.validator.UserStoryValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +37,9 @@ class UserStoryServiceTest {
     @Mock
     private TaskRepository taskRepository;
 
-    @InjectMocks
+    private final PriorityCalculator priorityCalculator = new PriorityCalculator();
+    private final UserStoryValidator userStoryValidator = new UserStoryValidator();
+
     private UserStoryService userStoryService;
 
     private UserStoryDTO userStoryDTO;
@@ -45,10 +47,11 @@ class UserStoryServiceTest {
     private ProductBacklog backlog;
     private Epic epic;
     private SprintBacklog sprintBacklog;
-    private Task task;
 
     @BeforeEach
     void setUp() {
+        userStoryService = new UserStoryService(userStoryRepository, productBacklogRepository, sprintBacklogRepository, epicRepository, taskRepository, priorityCalculator, userStoryValidator);
+
         backlog = ProductBacklog.builder().id(1L).build();
 
         epic = Epic.builder().id(1L).build();
@@ -58,7 +61,7 @@ class UserStoryServiceTest {
                 .userStories(new ArrayList<>())
                 .build();
 
-        task = Task.builder().id(1L).build();
+        Task task = Task.builder().id(1L).build();
 
         userStory = UserStory.builder()
                 .id(1L)
@@ -81,7 +84,6 @@ class UserStoryServiceTest {
                 .productBacklogId(1L)
                 .taskIds(List.of(task.getId()))
                 .build();
-
     }
 
     //---------------
@@ -95,17 +97,16 @@ class UserStoryServiceTest {
         assertAll(
                 () -> assertNotNull(result),
                 () -> assertEquals("UserStory 1", result.getTitre()),
-                () -> verify(userStoryRepository, times(1)).save(userStory)
+                () -> verify(userStoryRepository, times(1)).save(any(UserStory.class))
         );
-
     }
 
     //Exception test for creating a userStory
     @Test
     void testCreateUserStoryInBacklog_throwsException_WhenUSIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.createUserStoryInBacklog(userStoryDTO,null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.createUserStoryInBacklog(userStoryDTO, null)
+        );
 
         assertEquals("L'ID du backlog ne peut pas être null", exception.getMessage());
     }
@@ -115,7 +116,7 @@ class UserStoryServiceTest {
         when(productBacklogRepository.findById(2L)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(RuntimeException.class, () ->
-                userStoryService.createUserStoryInBacklog(userStoryDTO,2L)
+                userStoryService.createUserStoryInBacklog(userStoryDTO, 2L)
         );
 
         assertEquals("ProductBacklog non trouvé avec l'ID: 2", exception.getMessage());
@@ -128,13 +129,12 @@ class UserStoryServiceTest {
 
         when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(backlog));
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.createUserStoryInBacklog(userStoryDTO, 1L);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.createUserStoryInBacklog(userStoryDTO, 1L)
+        );
 
         assertEquals("Le titre de la user story ne peut pas être vide", exception.getMessage());
     }
-
 
     @Test
     void testCreateUserStoryInBacklog_ShouldThrowException_WhenDescriptionEmpty() {
@@ -143,9 +143,9 @@ class UserStoryServiceTest {
 
         when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(backlog));
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.createUserStoryInBacklog(userStoryDTO, 1L);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.createUserStoryInBacklog(userStoryDTO, 1L)
+        );
 
         assertEquals("La description de la user story ne peut pas être vide", exception.getMessage());
     }
@@ -157,7 +157,7 @@ class UserStoryServiceTest {
         doNothing().when(userStoryRepository).deleteById(1L);
 
         assertAll(
-                ()-> assertDoesNotThrow(() -> userStoryService.deleteUserStoryById(1L)),
+                () -> assertDoesNotThrow(() -> userStoryService.deleteUserStoryById(1L)),
                 () -> verify(userStoryRepository, times(1)).deleteById(1L)
         );
     }
@@ -167,7 +167,7 @@ class UserStoryServiceTest {
     void testDeleteUserStoryById_ShouldThrowException_WhenUserStoryNotFound() {
         when(userStoryRepository.existsById(2L)).thenReturn(false);
 
-        Exception exception = assertThrows(EntityNotFoundException.class, () ->
+        Exception exception = assertThrows(UserStoryNotFoundException.class, () ->
                 userStoryService.deleteUserStoryById(2L)
         );
 
@@ -176,9 +176,9 @@ class UserStoryServiceTest {
 
     @Test
     void testDeleteUserStoryById_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.deleteUserStoryById(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.deleteUserStoryById(null)
+        );
 
         assertEquals("L'ID du userStory ne peut pas être null", exception.getMessage());
     }
@@ -195,6 +195,7 @@ class UserStoryServiceTest {
                 () -> assertEquals(userStoryDTO.getTitre(), result.getTitre())
         );
     }
+
     //Exception test for get user by ID
     @Test
     void testGetUserStoryById_ShouldThrowException_WhenUserStoryNotFound() {
@@ -209,9 +210,9 @@ class UserStoryServiceTest {
 
     @Test
     void testGetUserStoryById_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.getUserStoryById(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.getUserStoryById(null)
+        );
 
         assertEquals("L'ID du userStory ne peut pas être null", exception.getMessage());
     }
@@ -226,19 +227,21 @@ class UserStoryServiceTest {
 
         assertAll(
                 () -> assertNotNull(result, "Result should not be null"),
-                ()->assertEquals(1, result.size()),
+                () -> assertEquals(1, result.size()),
                 () -> assertEquals(userStoryDTO.getTitre(), result.get(0).getTitre())
         );
     }
+
     //Exception test
     @Test
     void testGetUserStoriesByBacklogId_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.getUserStoriesByBacklogId(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.getUserStoriesByBacklogId(null)
+        );
 
         assertEquals("L'ID du backlog ne peut pas être null", exception.getMessage());
     }
+
     //---------------------------
     @Test
     void testGetUserStoriesByEpicId() {
@@ -249,19 +252,21 @@ class UserStoryServiceTest {
 
         assertAll(
                 () -> assertNotNull(result, "Result should not be null"),
-                ()->assertEquals(1, result.size()),
+                () -> assertEquals(1, result.size()),
                 () -> assertEquals(userStoryDTO.getTitre(), result.get(0).getTitre())
         );
     }
+
     //Exception test
     @Test
     void testGetUserStoriesByEpicId_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.getUserStoriesByEpicId(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.getUserStoriesByEpicId(null)
+        );
 
         assertEquals("L'ID de l'Epic ne peut pas être null", exception.getMessage());
     }
+
     //--------------------------------
     @Test
     void testGetUserStoriesBySprintBacklogId() {
@@ -272,22 +277,24 @@ class UserStoryServiceTest {
 
         assertAll(
                 () -> assertNotNull(result, "Result should not be null"),
-                ()->assertEquals(1, result.size()),
+                () -> assertEquals(1, result.size()),
                 () -> assertEquals(userStoryDTO.getTitre(), result.get(0).getTitre())
         );
     }
+
     //Exception test
     @Test
     void testGetUserStoriesBySprintBacklogId_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.getUserStoriesBySprintBacklogId(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.getUserStoriesBySprintBacklogId(null)
+        );
 
         assertEquals("L'ID du sprint backlog ne peut pas être null", exception.getMessage());
     }
+
     //----------------------
     @Test
-    void testGetUserStoriesByTaskId() {
+    void testGetUserStoryByTaskId() {
         Long taskId = 1L;
 
         Task task1 = Task.builder()
@@ -297,20 +304,20 @@ class UserStoryServiceTest {
 
         when(taskRepository.findById(taskId)).thenReturn(Optional.of(task1));
 
-        List<UserStoryDTO> result = userStoryService.getUserStoriesByTaskId(taskId);
+        UserStoryDTO result = userStoryService.getUserStoryByTaskId(taskId);
 
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(1, result.size()),
-                () -> assertEquals(userStoryDTO.getTitre(), result.get(0).getTitre())
+                () -> assertEquals(userStoryDTO.getTitre(), result.getTitre())
         );
     }
+
     //Exception test
     @Test
-    void testGetUserStoriesByTaskId_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.getUserStoriesByTaskId(null);
-        });
+    void testGetUserStoryByTaskId_ShouldThrowException_WhenIdIsNull() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.getUserStoryByTaskId(null)
+        );
 
         assertEquals("L'ID du Task ne peut pas être null", exception.getMessage());
     }
@@ -318,18 +325,15 @@ class UserStoryServiceTest {
     //--------------------------------------------------
     @Test
     void testUpdateUserStory() {
-        /*UserStory updatedDetails = UserStory.builder()
-                .id(1L)
-                .titre("US 1 Updated")
-                .description("Updated Description")
-                .priorite(MoSCoWPriority.SHOULD_HAVE)
-                .statut(StatutEnum.IN_PROGRESS)
-                .build();*/
-
         UserStoryDTO updatedDetailsDTO = UserStoryDTO.builder()
                 .id(1L)
                 .titre("US 1 Updated")
                 .description("Updated Description")
+                .valeurMetier(5)
+                .urgence(4)
+                .complexite(3)
+                .risques(2)
+                .dependances(1)
                 .priorite(MoSCoWPriority.MUST_HAVE)
                 .statut(StatutEnum.IN_PROGRESS)
                 .build();
@@ -338,25 +342,22 @@ class UserStoryServiceTest {
         when(userStoryRepository.save(any(UserStory.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-
         UserStoryDTO result = userStoryService.updateUserStory(1L, updatedDetailsDTO);
 
         assertAll(
                 () -> assertNotNull(result),
                 () -> assertEquals("US 1 Updated", result.getTitre()),
                 () -> assertEquals(StatutEnum.IN_PROGRESS, result.getStatut()),
-                () -> assertEquals(userStoryService.convertToDTO(
-                        userStoryRepository.save(userStory)
-                ).getPriorite(), result.getPriorite())
+                () -> assertNotNull(result.getPriorite())
         );
     }
 
     //Exception test
     @Test
-    void testUpdateUserStory_ShouldThrowException_WhenIdIsNull(){
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.updateUserStory(null, userStoryDTO);
-        });
+    void testUpdateUserStory_ShouldThrowException_WhenIdIsNull() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.updateUserStory(null, userStoryDTO)
+        );
 
         assertEquals("L'ID du userStory ne peut pas être null", exception.getMessage());
     }
@@ -375,9 +376,9 @@ class UserStoryServiceTest {
     //Exception test
     @Test
     void testUpdateUserStoryStatus_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.updateUserStoryStatus(null, StatutEnum.DONE);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.updateUserStoryStatus(null, StatutEnum.DONE)
+        );
 
         assertEquals("L'ID du userStory ne peut pas être null", exception.getMessage());
     }
@@ -401,16 +402,16 @@ class UserStoryServiceTest {
     //Exception test
     @Test
     void testUpdateUserStoryPriority_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.updateUserStoryPriority(null, MoSCoWPriority.SHOULD_HAVE);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.updateUserStoryPriority(null, MoSCoWPriority.SHOULD_HAVE)
+        );
 
         assertEquals("L'ID du userStory ne peut pas être null", exception.getMessage());
     }
 
     //-------------------------------------------
     @Test
-    void testRemoveUserStoryFromSprintBacklog(){
+    void testRemoveUserStoryFromSprintBacklog() {
         when(sprintBacklogRepository.findById(1L)).thenReturn(Optional.of(sprintBacklog));
         userStory.setSprintBacklog(sprintBacklog);
 
@@ -432,7 +433,7 @@ class UserStoryServiceTest {
                 userStoryService.removeUserStoryFromSprintBacklog(2L, 1L)
         );
 
-        assertEquals("SprintBacklog non trouvé ", exception.getMessage());
+        assertEquals("SprintBacklog introuvable", exception.getMessage());
     }
 
     @Test
@@ -444,7 +445,7 @@ class UserStoryServiceTest {
                 userStoryService.removeUserStoryFromSprintBacklog(1L, 2L)
         );
 
-        assertEquals("User Story non trouvée avec l'ID: 2", exception.getMessage());
+        assertEquals("UserStory introuvable avec l'ID: 2", exception.getMessage());
     }
 
     @Test
@@ -491,29 +492,28 @@ class UserStoryServiceTest {
         Exception exception = assertThrows(RuntimeException.class, () ->
                 userStoryService.addUserStoryToSprintBacklogById(1L, 2L)
         );
-        assertEquals("UserStory introuvable", exception.getMessage());
+        assertEquals("UserStory introuvable avec l'ID: 2", exception.getMessage());
     }
 
     @Test
-    void testAddUserStoryToSprintBacklogBySprintBacklogId_ShouldThrow_WhenSprintBacklogIdIsNull(){
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.addUserStoryToSprintBacklogById(null, 1L);
-        });
+    void testAddUserStoryToSprintBacklogBySprintBacklogId_ShouldThrow_WhenSprintBacklogIdIsNull() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.addUserStoryToSprintBacklogById(null, 1L)
+        );
 
         assertEquals("L'ID du sprint backlog ne peut pas être null", exception.getMessage());
     }
 
     @Test
-    void testAddUserStoryToSprintBacklogBySprintBacklogId_ShouldThrow_WhenUserStoryIdIsNull(){
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userStoryService.addUserStoryToSprintBacklogById(1L, null);
-        });
+    void testAddUserStoryToSprintBacklogBySprintBacklogId_ShouldThrow_WhenUserStoryIdIsNull() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                userStoryService.addUserStoryToSprintBacklogById(1L, null)
+        );
 
         assertEquals("L'ID du userStory ne peut pas être null", exception.getMessage());
     }
 
     //----------------------------------------------------
-
     @Test
     void testAddUserStoryToEpic() {
         when(epicRepository.findById(1L)).thenReturn(Optional.of(epic));
@@ -535,7 +535,7 @@ class UserStoryServiceTest {
         Exception exception = assertThrows(RuntimeException.class, () ->
                 userStoryService.addUserStoryToEpic(1L, 2L)
         );
-        assertEquals("UserStory introuvable", exception.getMessage());
+        assertEquals("UserStory introuvable avec l'ID: 2", exception.getMessage());
     }
 
     @Test

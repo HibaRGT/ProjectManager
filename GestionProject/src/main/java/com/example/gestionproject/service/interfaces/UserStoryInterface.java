@@ -12,7 +12,7 @@ public interface UserStoryInterface {
     public UserStoryDTO getUserStoryById(Long id);
     public List<UserStoryDTO> getUserStoriesByBacklogId(Long backlogId);
     public List<UserStoryDTO> getUserStoriesByEpicId(Long epicId);
-    public List<UserStoryDTO> getUserStoriesByTaskId(Long taskId);
+    public UserStoryDTO getUserStoryByTaskId(Long taskId);
     public List<UserStoryDTO> getUserStoriesBySprintBacklogId(Long sprintBacklogId);
     public UserStoryDTO updateUserStory(Long id, UserStoryDTO userStoryDetails);
     public UserStoryDTO updateUserStoryStatus(Long id, StatutEnum newStatus);

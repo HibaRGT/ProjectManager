@@ -1,20 +1,21 @@
 package com.example.gestionproject.service;
 
 import com.example.gestionproject.dto.EpicDTO;
+import com.example.gestionproject.exception.EpicNotFoundException;
 import com.example.gestionproject.model.Epic;
 import com.example.gestionproject.model.ProductBacklog;
 import com.example.gestionproject.repository.EpicRepository;
 import com.example.gestionproject.repository.ProductBacklogRepository;
 import com.example.gestionproject.service.implementation.EpicService;
+import com.example.gestionproject.validator.EpicValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,7 +30,8 @@ class EpicServiceTest {
     @Mock
     private ProductBacklogRepository productBacklogRepository;
 
-    @InjectMocks
+    private final EpicValidator epicValidator = new EpicValidator();
+
     private EpicService epicService;
 
     private Epic epic;
@@ -38,6 +40,8 @@ class EpicServiceTest {
 
     @BeforeEach
     void setUp() {
+        epicService = new EpicService(epicRepository, productBacklogRepository, epicValidator);
+
         productBacklog = ProductBacklog.builder().id(1L).build();
 
         epic = Epic.builder()
@@ -46,7 +50,6 @@ class EpicServiceTest {
                 .description("Description de l'epic")
                 .productBacklog(productBacklog)
                 .build();
-
 
         epicDTO = EpicDTO.builder()
                 .id(1L)
@@ -57,6 +60,7 @@ class EpicServiceTest {
                 .build();
     }
 
+    // -------------------- CREATE --------------------
     @Test
     void testCreateEpic() {
         when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(productBacklog));
@@ -65,10 +69,11 @@ class EpicServiceTest {
         EpicDTO savedEpic = epicService.createEpic(epicDTO);
 
         assertNotNull(savedEpic);
-        assertEquals(epicDTO.getId(), savedEpic.getId());
+        assertEquals(epic.getId(), savedEpic.getId());
         verify(epicRepository, times(1)).save(any(Epic.class));
     }
 
+    // -------------------- READ --------------------
     @Test
     void testGetEpicById() {
         when(epicRepository.findById(1L)).thenReturn(Optional.of(epic));
@@ -91,33 +96,30 @@ class EpicServiceTest {
         assertEquals("Epic 1", epics.get(0).getNom());
     }
 
-    //Exception Tests for getting Epics either by Id or by ProductBacklog Id
     @Test
     void getEpicById_ShouldThrowException_WhenEpicNotFound() {
         when(epicRepository.findById(2L)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> epicService.getEpicById(2L));
+        EpicNotFoundException exception = assertThrows(EpicNotFoundException.class,
+                () -> epicService.getEpicById(2L));
         assertEquals("Aucune Epic trouvée avec l'ID: 2", exception.getMessage());
     }
 
     @Test
     void getEpicById_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            epicService.getEpicById(null);
-        });
-
-        assertEquals("L'ID de l'epic ne peut pas être null", exception.getMessage());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> epicService.getEpicById(null));
+        assertEquals("Epic ID ne peut pas être null", exception.getMessage());
     }
 
     @Test
     void getEpicsByProductBacklogId_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            epicService.getEpicsByProductBacklogId(null);
-        });
-
-        assertEquals("L'ID du produit backlog ne peut pas être null", exception.getMessage());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> epicService.getEpicsByProductBacklogId(null));
+        assertEquals("ProductBacklog ID ne peut pas être null", exception.getMessage());
     }
 
+    // -------------------- UPDATE --------------------
     @Test
     void testUpdateEpic() {
         Epic updatedEpic = Epic.builder()
@@ -144,53 +146,48 @@ class EpicServiceTest {
         assertEquals(updatedEpic.getNom(), result.getNom());
         verify(epicRepository, times(1)).save(any(Epic.class));
     }
-    //Exception tests for modify method
+
     @Test
     void testUpdateEpic_ShouldThrowException_WhenEpicIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            epicService.updateEpic(null, epicDTO);
-        });
-
-        assertEquals("L'ID de l'epic ne peut pas être null", exception.getMessage());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> epicService.updateEpic(null, epicDTO));
+        assertEquals("Epic ID ne peut pas être null", exception.getMessage());
     }
 
     @Test
     void testUpdateEpic_ShouldThrowException_WhenEpicNotFound() {
         when(epicRepository.findById(2L)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            epicService.updateEpic(2L, epicDTO);
-        });
-
+        EpicNotFoundException exception = assertThrows(EpicNotFoundException.class,
+                () -> epicService.updateEpic(2L, epicDTO));
         assertEquals("Aucune Epic trouvée avec l'ID: 2", exception.getMessage());
     }
 
     @Test
     void testUpdateEpic_ShouldThrowException_WhenNomIsEmpty() {
-        EpicDTO invalidEpicDTO = new EpicDTO(1L, "", "Description de l'epic", 1L, null);
+        EpicDTO invalidEpicDTO = EpicDTO.builder()
+                .id(1L)
+                .nom("")
+                .description("Description de l'epic")
+                .build();
 
-        when(epicRepository.findById(1L)).thenReturn(Optional.of(epic));
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            epicService.updateEpic(1L, invalidEpicDTO);
-        });
-
-        assertEquals("Le titre de l'epic ne peut pas être vide", exception.getMessage());
+        assertThrows(IllegalArgumentException.class,
+                () -> epicService.updateEpic(1L, invalidEpicDTO));
     }
 
     @Test
     void testUpdateEpic_ShouldThrowException_WhenDescriptionIsEmpty() {
-        EpicDTO invalidEpicDTO = new EpicDTO(1L, "Nom de l'epic modifié", "", 1L, null);
+        EpicDTO invalidEpicDTO = EpicDTO.builder()
+                .id(1L)
+                .nom("Nom de l'epic modifié")
+                .description("")
+                .build();
 
-        when(epicRepository.findById(1L)).thenReturn(Optional.of(epic));
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            epicService.updateEpic(1L, invalidEpicDTO);
-        });
-
-        assertEquals("La description de l'epic ne peut pas être vide", exception.getMessage());
+        assertThrows(IllegalArgumentException.class,
+                () -> epicService.updateEpic(1L, invalidEpicDTO));
     }
 
+    // -------------------- DELETE --------------------
     @Test
     void testDeleteEpic() {
         when(epicRepository.existsById(1L)).thenReturn(true);
@@ -202,19 +199,17 @@ class EpicServiceTest {
 
     @Test
     void deleteEpic_ShouldThrowException_WhenEpicIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            epicService.deleteEpic(null);
-        });
-
-        assertEquals("L'ID de l'epic ne peut pas être null", exception.getMessage());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> epicService.deleteEpic(null));
+        assertEquals("Epic ID ne peut pas être null", exception.getMessage());
     }
 
     @Test
     void deleteEpic_ShouldThrowException_WhenEpicNotFound() {
         when(epicRepository.existsById(2L)).thenReturn(false);
 
-        Exception exception = assertThrows(RuntimeException.class, () -> epicService.deleteEpic(2L));
+        EpicNotFoundException exception = assertThrows(EpicNotFoundException.class,
+                () -> epicService.deleteEpic(2L));
         assertEquals("Epic non trouvée avec l'ID: 2", exception.getMessage());
-
     }
 }

@@ -1,6 +1,8 @@
 package com.example.gestionproject.service.implementation;
 
 import com.example.gestionproject.dto.TaskDTO;
+import com.example.gestionproject.exception.TaskNotFoundException;
+import com.example.gestionproject.exception.UserStoryNotFoundException;
 import com.example.gestionproject.model.Task;
 import com.example.gestionproject.model.TaskStatus;
 import com.example.gestionproject.model.UserStory;
@@ -28,7 +30,7 @@ public class TaskService implements TaskInterface {
     public TaskDTO createTaskForUserStory(Long userStoryId, TaskDTO taskDTO) {
         validateUserStoryId(userStoryId);
         UserStory userStory = userStoryRepository.findById(userStoryId)
-                .orElseThrow(() -> new RuntimeException("UserStory introuvable!"));
+                .orElseThrow(() -> new UserStoryNotFoundException("UserStory introuvable!"));
 
         if (userStory.getSprintBacklog() == null){
             throw new IllegalStateException("Impossible d'ajouter des tâches à une User Story qui n'est pas dans un Sprint");
@@ -52,7 +54,7 @@ public class TaskService implements TaskInterface {
         validateTaskId(taskId);
 
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException(NOT_FOUND_TASK + taskId));
+                .orElseThrow(() -> new TaskNotFoundException(NOT_FOUND_TASK + taskId));
         return convertToDTO(task);
     }
 
@@ -61,7 +63,7 @@ public class TaskService implements TaskInterface {
         validateUserStoryId(userStoryId);
 
         UserStory userStory = userStoryRepository.findById(userStoryId)
-                .orElseThrow(() -> new RuntimeException("User Story non trouvée avec l'ID: " + userStoryId));
+                .orElseThrow(() -> new UserStoryNotFoundException("User Story non trouvée avec l'ID: " + userStoryId));
 
         List<Task> tasks = userStory.getTasks();
         return tasks.stream().map(this::convertToDTO).toList();
@@ -72,7 +74,7 @@ public class TaskService implements TaskInterface {
         validateTaskId(taskId);
 
         Task existingTask = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException(NOT_FOUND_TASK + taskId));
+                .orElseThrow(() -> new TaskNotFoundException(NOT_FOUND_TASK + taskId));
 
         validateTaskData(updatedTaskDTO);
 
@@ -91,7 +93,7 @@ public class TaskService implements TaskInterface {
     public TaskDTO updateTaskStatus(Long taskId, TaskStatus status) {
         validateTaskId(taskId);
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Tache introuvable!"));
+                .orElseThrow(() -> new TaskNotFoundException("Tache introuvable!"));
 
         task.setStatus(status);
 
@@ -102,7 +104,7 @@ public class TaskService implements TaskInterface {
     public void deleteTask(Long taskId) {
         validateTaskId(taskId);
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException(NOT_FOUND_TASK + taskId));
+                .orElseThrow(() -> new TaskNotFoundException(NOT_FOUND_TASK + taskId));
 
         UserStory userStory = task.getUserStory();
         if (userStory != null) {

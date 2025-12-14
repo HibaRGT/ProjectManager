@@ -9,6 +9,8 @@ import com.example.gestionproject.service.implementation.ProductBacklogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -70,43 +72,27 @@ class ProductBacklogServiceTest {
     }
 
     //Exception Testing for createProductBacklog method
-    @Test
-    void createProductBacklog_NomNull_ShouldThrowIllegalArgumentException() {
-        ProductBacklogDTO backlog = new ProductBacklogDTO();
-        backlog.setNom(null);
-        backlog.setDescription("Description");
+    @ParameterizedTest
+    @CsvSource({
+            "null, Description, Le nom du backlog ne peut pas être vide",
+            "'', Description, Le nom du backlog ne peut pas être vide",
+            "Nom, null, La description du backlog ne peut pas être vide",
+            "Nom, '', La description du backlog ne peut pas être vide"
+    })
+    void createProductBacklog_InvalidDTO_ShouldThrowIllegalArgumentException(
+            String nom, String description, String expectedMessage) {
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> productBacklogService.createProductBacklog(backlog));
-        assertEquals("Le nom du backlog ne peut pas être vide", exception.getMessage());
-    }
+        if ("null".equals(nom)) nom = null;
+        if ("null".equals(description)) description = null;
 
-    @Test
-    void createProductBacklog_NomEmpty_ShouldThrowIllegalArgumentException() {
-        ProductBacklogDTO backlog = new ProductBacklogDTO();
-        backlog.setNom("");
-        backlog.setDescription("Description");
+        ProductBacklogDTO backlog1 = new ProductBacklogDTO();
+        backlog1.setNom(nom);
+        backlog1.setDescription(description);
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> productBacklogService.createProductBacklog(backlog));
-        assertEquals("Le nom du backlog ne peut pas être vide", exception.getMessage());
-    }
-    @Test
-    void createProductBacklog_DescriptionNull_ShouldThrowIllegalArgumentException() {
-        ProductBacklogDTO backlog = new ProductBacklogDTO();
-        backlog.setNom("Nom");
-        backlog.setDescription(null);
+        Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> productBacklogService.createProductBacklog(backlog1));
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> productBacklogService.createProductBacklog(backlog));
-        assertEquals("La description du backlog ne peut pas être vide", exception.getMessage());
-    }
-
-    @Test
-    void createProductBacklog_DescriptionEmpty_ShouldThrowIllegalArgumentException() {
-        ProductBacklogDTO backlog = new ProductBacklogDTO();
-        backlog.setNom("Nom");
-        backlog.setDescription("");
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> productBacklogService.createProductBacklog(backlog));
-        assertEquals("La description du backlog ne peut pas être vide", exception.getMessage());
+        assertEquals(expectedMessage, exception.getMessage());
     }
 
     //---------------
@@ -131,9 +117,9 @@ class ProductBacklogServiceTest {
 
     @Test
     void getProductBacklogById_IdIsNull_ShouldThrowRuntimeException() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            productBacklogService.getProductBacklogById(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            productBacklogService.getProductBacklogById(null)
+        );
 
         assertEquals("L'ID du produit backlog ne peut pas être null", exception.getMessage());
     }
@@ -151,9 +137,9 @@ class ProductBacklogServiceTest {
     //Exception testing for get product Backlog by project ID
     @Test
     void getProductBacklogByProjectId_IdIsNull_ShouldThrowRuntimeException() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            productBacklogService.getProductBacklogByProjectId(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            productBacklogService.getProductBacklogByProjectId(null)
+    );
 
         assertEquals("L'ID du projet ne peut pas être null", exception.getMessage());
     }
@@ -195,9 +181,9 @@ class ProductBacklogServiceTest {
     //Exception testing for deleting product backlogs
     @Test
     void testDeleteProductBacklog_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            productBacklogService.deleteProductBacklog(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            productBacklogService.deleteProductBacklog(null)
+        );
 
         assertEquals("L'ID du produit backlog ne peut pas être null", exception.getMessage());
     }
@@ -237,78 +223,47 @@ class ProductBacklogServiceTest {
     void testUpdateProductBacklog_ShouldThrowException_WhenBacklogNotFound() {
         when(productBacklogRepository.findById(2L)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            productBacklogService.updateProductBacklog(2L, backlogDTO);
-        });
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            productBacklogService.updateProductBacklog(2L, backlogDTO)
+        );
 
         assertEquals("ProductBacklog non trouvé avec l'ID: 2", exception.getMessage());
     }
 
     @Test
     void testUpdateProductBacklog_ShouldThrowException_WhenBacklogIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            productBacklogService.updateProductBacklog(null, backlogDTO);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            productBacklogService.updateProductBacklog(null, backlogDTO)
+        );
 
         assertEquals("L'ID du produit backlog ne peut pas être null", exception.getMessage());
     }
 
-    @Test
-    void testUpdateProductBacklog_NomNull_ShouldThrowIllegalArgumentException() {
+    @ParameterizedTest
+    @CsvSource({
+        "null, Description valide, Le nom du backlog ne peut pas être vide",
+                "'', Description valide, Le nom du backlog ne peut pas être vide",
+                "nom modifié, null, La description du backlog ne peut pas être vide",
+                "nom modifié, '', La description du backlog ne peut pas être vide"
+    })
+    void testUpdateProductBacklog_InvalidDTO_ShouldThrowIllegalArgumentException(
+            String nom, String description, String expectedMessage) {
+
         when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(backlog));
 
-        ProductBacklogDTO invalidDTO = ProductBacklogDTO.builder()
-                .nom(null)
-                .description("Description valide")
-                .build();
-
-
-        Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> productBacklogService.updateProductBacklog(1L, invalidDTO));
-        assertEquals("Le nom du backlog ne peut pas être vide", exception.getMessage());
-    }
-
-    @Test
-    void testUpdateProductBacklog_NomEmpty_ShouldThrowIllegalArgumentException() {
-        when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(backlog));
+        if ("null".equals(nom)) nom = null;
+        if ("null".equals(description)) description = null;
 
         ProductBacklogDTO invalidDTO = ProductBacklogDTO.builder()
-                .nom("")
-                .description("Description valide")
+                .nom(nom)
+                .description(description)
                 .build();
 
         Exception exception = assertThrows(IllegalArgumentException.class,
                 () -> productBacklogService.updateProductBacklog(1L, invalidDTO));
 
-        assertEquals("Le nom du backlog ne peut pas être vide", exception.getMessage());
+        assertEquals(expectedMessage, exception.getMessage());
     }
-    @Test
-    void testUpdateProductBacklog_DescriptionNull_ShouldThrowIllegalArgumentException() {
-        when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(backlog));
-        ProductBacklogDTO invalidDTO = ProductBacklogDTO.builder()
-                .nom("nom modifié")
-                .description(null)
-                .build();
-
-        Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> productBacklogService.updateProductBacklog(1L, invalidDTO));
-        assertEquals("La description du backlog ne peut pas être vide", exception.getMessage());
-    }
-
-    @Test
-    void testUpdateProductBacklog_DescriptionEmpty_ShouldThrowIllegalArgumentException() {
-        when(productBacklogRepository.findById(1L)).thenReturn(Optional.of(backlog));
-
-        ProductBacklogDTO invalidDTO = ProductBacklogDTO.builder()
-                .nom("nom modifié")
-                .description(null)
-                .build();
-
-        Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> productBacklogService.updateProductBacklog(1L, invalidDTO));
-        assertEquals("La description du backlog ne peut pas être vide", exception.getMessage());
-    }
-
 
 
 }

@@ -1,15 +1,14 @@
 package com.example.gestionproject.service.implementation;
 
 import com.example.gestionproject.dto.ProjectDTO;
+import com.example.gestionproject.exception.ProjectNotFoundException;
 import com.example.gestionproject.model.Project;
 import com.example.gestionproject.repository.ProjectRepository;
 import com.example.gestionproject.service.interfaces.ProjectInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ProjectService implements ProjectInterface {
@@ -49,7 +48,7 @@ public class ProjectService implements ProjectInterface {
         validateProjectId(id);
 
         Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Aucun projet trouvé avec l'ID: " + id));
+                .orElseThrow(() -> new ProjectNotFoundException("Aucun projet trouvé avec l'ID: " + id));
 
         return convertToDTO(project);
     }
@@ -58,7 +57,7 @@ public class ProjectService implements ProjectInterface {
     public void deleteProject(Long id) {
         validateProjectId(id);
         if (!projectRepository.existsById(id)) {
-            throw new RuntimeException("Project non trouvé avec l'ID: " + id);
+            throw new ProjectNotFoundException("Project non trouvé avec l'ID: " + id);
         }
         projectRepository.deleteById(id);
     }
@@ -67,7 +66,7 @@ public class ProjectService implements ProjectInterface {
     public ProjectDTO updateProject(Long id, ProjectDTO projectDTO) {
         validateProjectId(id);
         Project pr = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project non trouvé avec l'ID: " + id));
+                .orElseThrow(() -> new ProjectNotFoundException("Project non trouvé avec l'ID: " + id));
 
         validateProject(projectDTO);
 

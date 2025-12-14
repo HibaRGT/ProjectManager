@@ -1,6 +1,7 @@
 package com.example.gestionproject.service.implementation;
 
 import com.example.gestionproject.dto.*;
+import com.example.gestionproject.exception.InvalidCredentialsException;
 import com.example.gestionproject.model.*;
 import com.example.gestionproject.repository.*;
 import com.example.gestionproject.config.JwtUtils;
@@ -39,7 +40,7 @@ public class AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() ->new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new InvalidCredentialsException("Invalid credentials");
         }
         String token = jwtUtils.generateToken(user.getUsername(), user.getRole());
         return new AuthResponse(token);

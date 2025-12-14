@@ -50,9 +50,9 @@ public class UserStoryController {
     }
 
     @GetMapping("task/{taskId}")
-    public  ResponseEntity<List<UserStoryDTO>> getUserStoryByTaskId(@PathVariable Long taskId) {
-        List<UserStoryDTO> userStories=userStoryService.getUserStoriesByTaskId(taskId);
-        return new ResponseEntity<>(userStories, HttpStatus.OK);
+    public  ResponseEntity<UserStoryDTO> getUserStoryByTaskId(@PathVariable Long taskId) {
+        UserStoryDTO userStory=userStoryService.getUserStoryByTaskId(taskId);
+        return new ResponseEntity<>(userStory, HttpStatus.OK);
     }
 
 

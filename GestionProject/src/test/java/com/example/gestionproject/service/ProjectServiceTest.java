@@ -7,6 +7,8 @@ import com.example.gestionproject.service.implementation.ProjectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,7 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ProjectServiceTest {
+class ProjectServiceTest {
 
     @Mock
     private ProjectRepository projectRepository;
@@ -81,9 +83,9 @@ public class ProjectServiceTest {
     //Exception Testing
     @Test
     void testGetProjectById_ShouldThrow_WhenIdIsNull(){
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            projectService.getProjectById(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            projectService.getProjectById(null)
+        );
 
         assertEquals("L'ID du projet ne peut pas être null", exception.getMessage());
     }
@@ -92,9 +94,9 @@ public class ProjectServiceTest {
     void testGetProjectById_ShouldThrow_WhenNotFound(){
         when(projectRepository.findById(2L)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            projectService.getProjectById(2L);
-        });
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            projectService.getProjectById(2L)
+        );
 
         assertEquals("Aucun projet trouvé avec l'ID: 2", exception.getMessage());
     }
@@ -112,9 +114,9 @@ public class ProjectServiceTest {
     //Exception testing for deleting project
     @Test
     void testDeleteProject_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            projectService.deleteProject(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            projectService.deleteProject(null)
+        );
 
         assertEquals("L'ID du projet ne peut pas être null", exception.getMessage());
     }
@@ -123,9 +125,9 @@ public class ProjectServiceTest {
     void testDeleteProject_ShouldThrowException_WhenNotFoundNull() {
         when(projectRepository.existsById(2L)).thenReturn(false);
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            projectService.deleteProject(2L);
-        });
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            projectService.deleteProject(2L)
+        );
 
         assertEquals("Project non trouvé avec l'ID: 2", exception.getMessage());
     }
@@ -134,13 +136,13 @@ public class ProjectServiceTest {
     void testUpdateProject() {
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
 
-        Project updatedProject_ = Project.builder()
+        Project updatedProject1 = Project.builder()
                 .id(1L)
                 .nom("Project Updated")
                 .description("Updated description")
                 .build();
 
-        when(projectRepository.save(any(Project.class))).thenReturn(updatedProject_);
+        when(projectRepository.save(any(Project.class))).thenReturn(updatedProject1);
 
         ProjectDTO updatedProject = ProjectDTO.builder()
                 .id(1L)
@@ -161,75 +163,45 @@ public class ProjectServiceTest {
     void testUpdateProject_ShouldThrow_WhenNotFound() {
         when(projectRepository.findById(2L)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            projectService.updateProject(2L, projectDTO);
-        });
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            projectService.updateProject(2L, projectDTO)
+        );
 
         assertEquals("Project non trouvé avec l'ID: 2", exception.getMessage());
     }
 
     @Test
     void testUpdateProject_ShouldThrow_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            projectService.updateProject(null, projectDTO);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            projectService.updateProject(null, projectDTO)
+        );
 
         assertEquals("L'ID du projet ne peut pas être null", exception.getMessage());
     }
 
-    @Test
-    void testUpdateProject_NomNull_ShouldThrow() {
+    @ParameterizedTest
+    @CsvSource({
+            "null, Description valide, Le titre du projet ne peut pas être vide",
+            "'', Description valide, Le titre du projet ne peut pas être vide",
+            "nom modifié, null, La description du projet ne peut pas être vide",
+            "nom modifié, '', La description du projet ne peut pas être vide"
+    })
+    void updateProject_InvalidDTO_ShouldThrowIllegalArgumentException(
+            String nom, String description, String expectedMessage) {
+
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
 
-        ProjectDTO invalidDTO = ProjectDTO.builder()
-                .nom(null)
-                .description("Description valide")
-                .build();
-
-
-        Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> projectService.updateProject(1L, invalidDTO));
-        assertEquals("Le titre du projet ne peut pas être vide", exception.getMessage());
-    }
-
-    @Test
-    void testUpdateProject_NomEmpty_ShouldThrow() {
-        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+        if ("null".equals(nom)) nom = null;
+        if ("null".equals(description)) description = null;
 
         ProjectDTO invalidDTO = ProjectDTO.builder()
-                .nom("")
-                .description("Description valide")
+                .nom(nom)
+                .description(description)
                 .build();
 
         Exception exception = assertThrows(IllegalArgumentException.class,
                 () -> projectService.updateProject(1L, invalidDTO));
 
-        assertEquals("Le titre du projet ne peut pas être vide", exception.getMessage());
-    }
-    @Test
-    void testUpdateProject_DescriptionNull_ShouldThrowIllegalArgumentException() {
-        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
-        ProjectDTO invalidDTO = ProjectDTO.builder()
-                .nom("nom modifié")
-                .description(null)
-                .build();
-
-        Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> projectService.updateProject(1L, invalidDTO));
-        assertEquals("La description du projet ne peut pas être vide", exception.getMessage());
-    }
-
-    @Test
-    void testUpdateProductBacklog_DescriptionEmpty_ShouldThrowIllegalArgumentException() {
-        when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
-
-        ProjectDTO invalidDTO = ProjectDTO.builder()
-                .nom("nom modifié")
-                .description(null)
-                .build();
-
-        Exception exception = assertThrows(IllegalArgumentException.class,
-                () -> projectService.updateProject(1L, invalidDTO));
-        assertEquals("La description du projet ne peut pas être vide", exception.getMessage());
+        assertEquals(expectedMessage, exception.getMessage());
     }
 }

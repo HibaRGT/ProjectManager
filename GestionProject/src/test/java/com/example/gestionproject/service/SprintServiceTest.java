@@ -24,7 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class SprintServiceTest {
+class SprintServiceTest {
 
     @Mock
     private SprintRepository sprintRepository;
@@ -89,90 +89,90 @@ public class SprintServiceTest {
     //Exception testing
     @Test
     void testCreateSprint_ShouldThrowException_WhenNameIsNull() {
-        SprintDTO sprintDTO = SprintDTO.builder()
+        SprintDTO sprintDTO1 = SprintDTO.builder()
                 .name(null)
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().plusDays(10))
                 .build();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            sprintService.createSprint(sprintDTO);
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            sprintService.createSprint(sprintDTO1)
+        );
 
         assertEquals("Le nom du sprint ne peut pas être vide", exception.getMessage());
     }
 
     @Test
     void testCreateSprint_ShouldThrowException_WhenStartDateIsNull() {
-        SprintDTO sprintDTO = SprintDTO.builder()
+        SprintDTO sprintDTO1 = SprintDTO.builder()
                 .name("Sprint 1")
                 .startDate(null)
                 .endDate(LocalDate.now().plusDays(10))
                 .build();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            sprintService.createSprint(sprintDTO);
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            sprintService.createSprint(sprintDTO1)
+        );
 
         assertEquals("La date de début du sprint est obligatoire", exception.getMessage());
     }
 
     @Test
     void testCreateSprint_ShouldThrowException_WhenEndDateIsNull() {
-        SprintDTO sprintDTO = SprintDTO.builder()
+        SprintDTO sprintDTO1 = SprintDTO.builder()
                 .name("Sprint 1")
                 .startDate(LocalDate.now())
                 .endDate(null)
                 .build();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            sprintService.createSprint(sprintDTO);
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            sprintService.createSprint(sprintDTO1)
+        );
 
         assertEquals("La date de fin du sprint est obligatoire", exception.getMessage());
     }
 
     @Test
     void testCreateSprint_ShouldThrowException_WhenEndDateBeforeStartDate() {
-        SprintDTO sprintDTO = SprintDTO.builder()
+        SprintDTO sprintDTO1 = SprintDTO.builder()
                 .name("Sprint 1")
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().minusDays(1))
                 .build();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            sprintService.createSprint(sprintDTO);
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            sprintService.createSprint(sprintDTO1)
+        );
 
         assertEquals("La date de fin ne peut pas être antérieure à la date de début", exception.getMessage());
     }
 
     @Test
     void testCreateSprint_ShouldThrowException_WhenDurationLessThan7Days() {
-        SprintDTO sprintDTO = SprintDTO.builder()
+        SprintDTO sprintDTO1 = SprintDTO.builder()
                 .name("Sprint 1")
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().plusDays(5))
                 .build();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            sprintService.createSprint(sprintDTO);
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            sprintService.createSprint(sprintDTO1)
+        );
 
         assertEquals("La durée du sprint ne peut pas être inférieure à 7 jours", exception.getMessage());
     }
 
     @Test
     void testCreateSprint_ShouldThrowException_WhenDurationMoreThan30Days() {
-        SprintDTO sprintDTO = SprintDTO.builder()
+        SprintDTO sprintDTO1 = SprintDTO.builder()
                 .name("Sprint 1")
                 .startDate(LocalDate.now())
                 .endDate(LocalDate.now().plusDays(31))
                 .build();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            sprintService.createSprint(sprintDTO);
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            sprintService.createSprint(sprintDTO1)
+        );
 
         assertEquals("La durée du sprint ne peut pas dépasser 30 jours", exception.getMessage());
     }
@@ -193,9 +193,9 @@ public class SprintServiceTest {
     //Exception Testing
     @Test
     void testGetSprintById_ShouldThrow_WhenIdIsNull(){
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            sprintService.getSprintById(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            sprintService.getSprintById(null)
+        );
 
         assertEquals("L'ID du sprint ne peut pas être null", exception.getMessage());
     }
@@ -204,9 +204,9 @@ public class SprintServiceTest {
     void testGetSprintById_ShouldThrow_WhenNotFound(){
         when(sprintRepository.findById(2L)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            sprintService.getSprintById(2L);
-        });
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            sprintService.getSprintById(2L)
+        );
 
         assertEquals("Sprint non trouvé avec l'ID: 2", exception.getMessage());
     }
@@ -224,9 +224,9 @@ public class SprintServiceTest {
     //Exception testing for deleting project
     @Test
     void testDeleteSprint_ShouldThrowException_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            sprintService.deleteSprint(null);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            sprintService.deleteSprint(null)
+        );
 
         assertEquals("L'ID du sprint ne peut pas être null", exception.getMessage());
     }
@@ -236,9 +236,9 @@ public class SprintServiceTest {
         when(sprintRepository.existsById(2L)).thenReturn(false);
 
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            sprintService.deleteSprint(2L);
-        });
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            sprintService.deleteSprint(2L)
+        );
 
         assertEquals("Sprint non trouvée avec l'ID: 2", exception.getMessage());
     }
@@ -262,18 +262,18 @@ public class SprintServiceTest {
     void testUpdateSprint_ShouldThrow_WhenNotFound() {
         when(sprintRepository.findById(2L)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            sprintService.updateSprint(2L, updatedSprintDTO);
-        });
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            sprintService.updateSprint(2L, updatedSprintDTO)
+        );
 
         assertEquals("Sprint non trouvé avec l'ID: 2", exception.getMessage());
     }
 
     @Test
     void testUpdateSprint_ShouldThrow_WhenIdIsNull() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            sprintService.updateSprint(null, updatedSprintDTO);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+            sprintService.updateSprint(null, updatedSprintDTO)
+        );
 
         assertEquals("L'ID du sprint ne peut pas être null", exception.getMessage());
     }

@@ -1,6 +1,7 @@
 package com.example.gestionproject.service.implementation;
 
 import com.example.gestionproject.dto.SprintDTO;
+import com.example.gestionproject.exception.SprintNotFoundException;
 import com.example.gestionproject.model.Sprint;
 import com.example.gestionproject.model.SprintBacklog;
 import com.example.gestionproject.repository.SprintBacklogRepository;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +50,7 @@ public class SprintService implements SprintInterface {
     public SprintDTO getSprintById(Long id) {
         validateSprintId(id);
         Sprint sprint = sprintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sprint non trouvé avec l'ID: " + id));
+                .orElseThrow(() -> new SprintNotFoundException("Sprint non trouvé avec l'ID: " + id));
         return convertToDTO(sprint);
     }
 
@@ -56,7 +58,7 @@ public class SprintService implements SprintInterface {
     public SprintDTO updateSprint(Long id, SprintDTO sprintDetails) {
         validateSprintId(id);
         Sprint existingSprint = sprintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sprint non trouvé avec l'ID: " + id));
+                .orElseThrow(() -> new SprintNotFoundException("Sprint non trouvé avec l'ID: " + id));
 
         validateSprintData(sprintDetails);
 
@@ -73,7 +75,7 @@ public class SprintService implements SprintInterface {
         return sprintBacklogs.stream()
                 .map(SprintBacklog::getSprint)
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
@@ -81,7 +83,7 @@ public class SprintService implements SprintInterface {
         validateSprintId(id);
 
         if(!sprintRepository.existsById(id)) {
-            throw new RuntimeException("Sprint non trouvée avec l'ID: "+ id);
+            throw new SprintNotFoundException("Sprint non trouvée avec l'ID: "+ id);
         }
         sprintRepository.deleteById(id);
     }

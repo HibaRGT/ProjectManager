@@ -1,6 +1,9 @@
 package com.example.gestionproject.service.implementation;
 
 import com.example.gestionproject.dto.SprintBacklogDTO;
+import com.example.gestionproject.exception.ProductBacklogNotFound;
+import com.example.gestionproject.exception.SprintBacklogNotFound;
+import com.example.gestionproject.exception.SprintNotFoundException;
 import com.example.gestionproject.model.ProductBacklog;
 import com.example.gestionproject.model.Sprint;
 import com.example.gestionproject.model.SprintBacklog;
@@ -11,7 +14,6 @@ import com.example.gestionproject.repository.SprintRepository;
 import com.example.gestionproject.service.interfaces.SprintBacklogInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
@@ -36,7 +38,7 @@ public class SprintBacklogService implements SprintBacklogInterface{
     public SprintBacklogDTO getSprintBacklogById(Long id) {
         validateSprintBacklogId(id);
         SprintBacklog sp = sprintBacklogrepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("SprintBacklog introuvable"));
+                .orElseThrow(()-> new SprintBacklogNotFound("SprintBacklog introuvable"));
         return convertToDTO(sp);
     }
 
@@ -44,7 +46,7 @@ public class SprintBacklogService implements SprintBacklogInterface{
     public SprintBacklogDTO getSprintBacklogBySprintId(Long id) {
         validateSprintId(id);
         Sprint sprint = sprintRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Sprint introuvable"));
+                .orElseThrow(()-> new SprintNotFoundException("Sprint introuvable"));
 
         SprintBacklog sp = sprint.getSprintBacklog();
 
@@ -59,10 +61,10 @@ public class SprintBacklogService implements SprintBacklogInterface{
         SprintBacklog sprintBacklog = SprintBacklog.builder().build();
 
         Sprint sprint = sprintRepository.findById(sprintBacklogDTO.getSprintId())
-                .orElseThrow(() -> new RuntimeException("Sprint introuvable"));
+                .orElseThrow(() -> new SprintNotFoundException("Sprint introuvable"));
 
         ProductBacklog pb = productBacklogRepository.findById(sprintBacklogDTO.getProductBacklogId())
-                .orElseThrow(()-> new RuntimeException("ProductBacklog introuvable"));
+                .orElseThrow(()-> new ProductBacklogNotFound("ProductBacklog introuvable"));
 
         sprintBacklog.setSprint(sprint);
         sprintBacklog.setProductBacklog(pb);
@@ -76,7 +78,7 @@ public class SprintBacklogService implements SprintBacklogInterface{
     public void deleteSprintBacklogById(Long id) {
         validateSprintBacklogId(id);
         SprintBacklog sp = sprintBacklogrepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("SprintBacklog introuvable"));
+                .orElseThrow(() -> new SprintBacklogNotFound("SprintBacklog introuvable"));
 
         sprintBacklogrepository.delete(sp);
     }
@@ -87,7 +89,7 @@ public class SprintBacklogService implements SprintBacklogInterface{
                 .id(sprintBLOG.getId())
                 .sprintId(sprintBLOG.getSprint() != null ? sprintBLOG.getSprint().getId() : null)
                 .userStoryIds(sprintBLOG.getUserStories() != null
-                        ? sprintBLOG.getUserStories().stream().map(UserStory::getId).collect(Collectors.toList())
+                        ? sprintBLOG.getUserStories().stream().map(UserStory::getId).collect(Collectors.toCollection(ArrayList::new))
                         : new ArrayList<>())
                 .productBacklogId(sprintBLOG.getProductBacklog() != null ? sprintBLOG.getProductBacklog().getId() : null)
                 .build();
@@ -105,13 +107,13 @@ public class SprintBacklogService implements SprintBacklogInterface{
 
     private void validateSprintBacklogId(Long id){
         if(id == null){
-            throw new RuntimeException("L'ID du sprint backlog ne peut pas etre null");
+            throw new IllegalArgumentException("L'ID du sprint backlog ne peut pas etre null");
         }
     }
 
     private void validateSprintId(Long id){
         if(id == null){
-            throw new RuntimeException("L'ID du sprint ne peut pas etre null");
+            throw new IllegalArgumentException("L'ID du sprint ne peut pas etre null");
         }
     }
 }
